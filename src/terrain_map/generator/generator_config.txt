@@ -1,29 +1,56 @@
-Map Generator Configuration Explained
-=====================================
+# Configuration File Explanation for Gradient Skier Map Generator
 
-This file details the parameters used in `generator_config.json` to control procedural map generation.
+This file explains each parameter in `generator_config.json`. Understanding these
+will allow you to fine-tune the terrain to your exact specifications.
 
-== Shelter (Main Basin) ==
-SHELTER_DEPTH: Base "depth" of the main shelter basin. A larger value creates a deeper valley for the shelter.
-SHELTER_WIDTH: How wide the main basin is. A larger value creates a broader, more gradual valley.
+---
+## Shelter & Traps (The Valleys)
 
-== Traps (Smaller Basins) ==
-TRAP_DENSITY: How many traps to generate per pixel of map area.
-TRAP_DEPTH_MIN_RATIO: The minimum depth of a trap, as a ratio of SHELTER_DEPTH. (e.g., 0.5 means a trap is at least 50% as deep as the shelter).
-TRAP_DEPTH_MAX_RATIO: The maximum depth of a trap, as a ratio of SHELTER_DEPTH. (e.g., 0.8 means a trap is at most 80% as deep as the shelter).
-TRAP_WIDTH_MIN: The minimum width of a trap basin.
-TRAP_WIDTH_MAX: The maximum width of a trap basin.
+These parameters control the main "shelter" basin and the smaller "trap" basins.
 
-== Perlin Noise (Terrain Texture) ==
-NOISE_OCTAVES: The level of detail for the Perlin noise. Higher values add more fine-grained detail, creating more complex terrain but taking longer to compute.
-NOISE_FREQUENCY: How "zoomed in" the noise pattern is. Higher values result in more frequent, smaller features (a "busier" map).
-NOISE_AMPLITUDE: How high the turbulent ridges are. This is a multiplier for the noise value, directly affecting the height of hills and ridges.
+- "SHELTER_DEPTH": How deep the main shelter valley is. Higher values create a deeper hole.
+- "SHELTER_WIDTH": The overall size (radius) of the shelter valley before warping.
 
-== Domain Warping (Noise Distortion) ==
-DOMAIN_WARP_ENABLED: A boolean (true/false) to enable or disable domain warping. Warping distorts the noise pattern, creating more natural, swirling, and less grid-like features.
-DOMAIN_WARP_OCTAVES: The level of detail for the warping noise. Similar to NOISE_OCTAVES but for the distortion field.
-DOMAIN_WARP_FREQUENCY: The frequency of the warping noise. Controls the "waviness" of the distortion.
-DOMAIN_WARP_AMPLITUDE: The strength of the distortion effect. Higher values will warp the terrain more significantly.
+- "TRAP_DENSITY": A ratio determining how many traps appear relative to the map's area. (e.g., 0.0005 means 5 traps per 10,000 pixels).
+- "TRAP_DEPTH_MIN_RATIO": The shallowest a trap can be, as a percentage of `SHELTER_DEPTH`. (e.g., 0.5 means a trap can be at least 50% as deep as the shelter).
+- "TRAP_DEPTH_MAX_RATIO": The deepest a trap can be, as a percentage of `SHELTER_DEPTH`.
+- "TRAP_WIDTH_MIN": The smallest possible size (radius) for a trap basin.
+- "TRAP_WIDTH_MAX": The largest possible size (radius) for a trap basin.
 
-== Starting Conditions ==
-START_ALTITUDE_THRESHOLD: An altitude value on a 0-255 scale. Any point on the map with an altitude higher than this value is considered a valid starting point for the skier.
+---
+## Basin Warping (Making Valleys Irregular)
+
+This is the key to making your circular valleys look like natural, irregular depressions.
+It works by distorting the coordinates before the valley is drawn.
+
+- "BASIN_WARP_OCTAVES": Layers of detail in the warp noise. More octaves = more complex and wiggly edges on your valleys.
+- "BASIN_WARP_FREQUENCY": The "zoom level" of the warp noise. Higher values create smaller, more frequent wiggles. Lower values create larger, smoother distortions.
+- "BASIN_WARP_AMPLITUDE": The **strength** of the distortion. This is the most important value for controlling irregularity. A value of 0 gives a perfect circle; a high value gives a very chaotic shape.
+
+---
+## Ridge Generation (The Mountains)
+
+This system uses a "masking" technique. Think of it as painting a large, soft, elliptical area (the "mask") where you want a mountain range to be, and then filling that area with detailed, rocky noise.
+
+- "RIDGE_RANGES_MIN" / "_MAX": The minimum and maximum number of separate mountain ranges to generate on the map.
+
+- "RIDGE_MASK_LENGTH_MIN" / "_MAX": Controls the length of the elliptical "footprint" for a mountain range.
+- "RIDGE_MASK_WIDTH_MIN" / "_MAX": Controls the width of the elliptical "footprint". **To get long, snaking ranges, make the length much larger than the width.**
+
+- "RIDGE_OCTAVES": Layers of detail in the mountain's texture. More octaves create more complex and realistic rock formations.
+- "RIDGE_FREQUENCY": The jaggedness of the mountains. Higher values create more, smaller, sharper peaks packed together.
+- "RIDGE_AMPLITUDE": The **height** of the mountains. Higher values create taller, more dramatic peaks and clifftops.
+
+---
+## Detail Noise (Overall Texture)
+
+This adds a final layer of fine-grained, low-intensity noise over the entire map to give everything a slightly rougher, more natural texture.
+
+- "DETAIL_NOISE_OCTAVES": Layers of detail for the texture.
+- "DETAIL_NOISE_FREQUENCY": The "grain" of the texture. Higher frequency = finer grain.
+- "DETAIL_NOISE_AMPLITUDE": The height of the texture. **Keep this value low**, otherwise it will overwhelm the larger features you've created.
+
+---
+## General Settings
+
+- "START_ALTITUDE_THRESHOLD": A gameplay value. It defines how high a point on the map must be (on the 0-255 scale) to be considered a valid starting position for the skier.
