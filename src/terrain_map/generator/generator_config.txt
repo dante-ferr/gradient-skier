@@ -1,0 +1,29 @@
+Map Generator Configuration Explained
+=====================================
+
+This file details the parameters used in `generator_config.json` to control procedural map generation.
+
+== Shelter (Main Basin) ==
+SHELTER_DEPTH: Base "depth" of the main shelter basin. A larger value creates a deeper valley for the shelter.
+SHELTER_WIDTH: How wide the main basin is. A larger value creates a broader, more gradual valley.
+
+== Traps (Smaller Basins) ==
+TRAP_DENSITY: How many traps to generate per pixel of map area.
+TRAP_DEPTH_MIN_RATIO: The minimum depth of a trap, as a ratio of SHELTER_DEPTH. (e.g., 0.5 means a trap is at least 50% as deep as the shelter).
+TRAP_DEPTH_MAX_RATIO: The maximum depth of a trap, as a ratio of SHELTER_DEPTH. (e.g., 0.8 means a trap is at most 80% as deep as the shelter).
+TRAP_WIDTH_MIN: The minimum width of a trap basin.
+TRAP_WIDTH_MAX: The maximum width of a trap basin.
+
+== Perlin Noise (Terrain Texture) ==
+NOISE_OCTAVES: The level of detail for the Perlin noise. Higher values add more fine-grained detail, creating more complex terrain but taking longer to compute.
+NOISE_FREQUENCY: How "zoomed in" the noise pattern is. Higher values result in more frequent, smaller features (a "busier" map).
+NOISE_AMPLITUDE: How high the turbulent ridges are. This is a multiplier for the noise value, directly affecting the height of hills and ridges.
+
+== Domain Warping (Noise Distortion) ==
+DOMAIN_WARP_ENABLED: A boolean (true/false) to enable or disable domain warping. Warping distorts the noise pattern, creating more natural, swirling, and less grid-like features.
+DOMAIN_WARP_OCTAVES: The level of detail for the warping noise. Similar to NOISE_OCTAVES but for the distortion field.
+DOMAIN_WARP_FREQUENCY: The frequency of the warping noise. Controls the "waviness" of the distortion.
+DOMAIN_WARP_AMPLITUDE: The strength of the distortion effect. Higher values will warp the terrain more significantly.
+
+== Starting Conditions ==
+START_ALTITUDE_THRESHOLD: An altitude value on a 0-255 scale. Any point on the map with an altitude higher than this value is considered a valid starting point for the skier.
