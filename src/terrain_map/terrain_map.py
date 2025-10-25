@@ -1,5 +1,4 @@
 import numpy as np
-from scipy.ndimage import sobel
 from PIL import Image
 
 
@@ -31,10 +30,10 @@ class TerrainMap:
         # Note: We use float32 for the gradients to handle slopes precisely.
         map_float = self.height_data.astype(np.float32)
 
-        # self.gradient_y corresponds to df/dy (changes along axis 0)
-        self.gradient_y = sobel(map_float, axis=0)
-        # self.gradient_x corresponds to df/dx (changes along axis 1)
-        self.gradient_x = sobel(map_float, axis=1)
+        # # self.gradient_y corresponds to df/dy (changes along axis 0)
+        # self.gradient_y = sobel(map_float, axis=0)
+        # # self.gradient_x corresponds to df/dx (changes along axis 1)
+        # self.gradient_x = sobel(map_float, axis=1)
 
     def get_gradient_at(self, x, y):
         """
