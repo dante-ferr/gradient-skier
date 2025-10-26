@@ -1,6 +1,6 @@
 import numpy as np
 from PIL import Image
-
+from scipy.ndimage import sobel
 
 class TerrainMap:
     """
@@ -26,6 +26,11 @@ class TerrainMap:
         self.height = self.height_data.shape[0]
 
         map_float = self.height_data.astype(np.float32)
+
+        # self.gradient_y corresponds to df/dy (changes along axis 0)
+        self.gradient_y = sobel(map_float, axis=0)
+        # self.gradient_x corresponds to df/dx (changes along axis 1)
+        self.gradient_x = sobel(map_float, axis=1)
 
     def get_gradient_at(self, x, y):
         """

@@ -8,46 +8,52 @@ from ._corridor_generator import CorridorGenerator
 class MapGenerator:
     """
     Procedurally generates a more natural-looking TerrainMap.
-    The corridor path is now generated on a smooth map to guarantee convergence.
+    Hides the corridor by applying a uniform detail noise globally
+    and only attenuating the traps within the corridor.
     """
 
     def __init__(self, config_override=None):
         self.config = generator_config
         if config_override:
             for key, value in config_override.items():
-                setattr(self.config, key, value)
+                if hasattr(self.config, key):
+                    setattr(self.config, key, value)
+                else:
+                    print(f"Warning: Config override key '{key}' not found.")
 
+        # Noise for warping basins
         self.warp_noise_x = PerlinNoise(
             octaves=self.config.BASIN_WARP_OCTAVES, seed=random.randint(0, 10000)
         )
         self.warp_noise_y = PerlinNoise(
             octaves=self.config.BASIN_WARP_OCTAVES, seed=random.randint(0, 10000)
         )
+        # Corridor generator
         self.corridor_generator = CorridorGenerator(self.config)
 
     def generate(self, width, height):
         """
-        The main public method. Generates and returns a new TerrainMap.
+        The main public method. Generates and returns a new TerrainMap and attenuation mask.
         """
         xx, yy = np.meshgrid(np.linspace(-5, 5, width), np.linspace(-5, 5, height))
         shelter_coords_logical = self._find_shelter_location()
 
-        # 1. Generate the base layers of the map
+        # 1. Generate base terrain (shelter + detail noise)
         shelter_map, detail_noise_map = self._generate_base_terrain(
             xx, yy, shelter_coords_logical
         )
 
-        # 2. Generate the safe corridor based on the base terrain
+        # 2. Generate the safe corridor mask (pathfinding on smooth map)
         attenuation_mask = self._generate_corridor_mask(
             width, height, xx, yy, shelter_coords_logical, shelter_map, detail_noise_map
         )
 
-        # 3. Generate traps and apply the corridor's attenuation
+        # 3. Generate traps (full strength) and apply corridor attenuation
         attenuated_traps_map = self._generate_and_attenuate_traps(
             xx, yy, width, height, attenuation_mask
         )
 
-        # 4. Combine all layers and normalize the final map
+        # 4. Combine all layers (Shelter + Attenuated Traps + Global Detail Noise)
         final_map, shelter_coords_pixel = self._combine_and_finalize_map(
             shelter_map,
             attenuated_traps_map,
@@ -63,12 +69,12 @@ class MapGenerator:
         )
 
     def _find_shelter_location(self):
-        """Finds a random location for the shelter, ensuring it's not too central."""
+        """Finds a random location for the shelter near an edge."""
         while True:
             shelter_x = random.uniform(-5, 5)
             shelter_y = random.uniform(-5, 5)
-            # Ensure the shelter is somewhat near an edge for a longer path
-            if abs(shelter_x) + abs(shelter_y) > 5:
+            # Ensure shelter is somewhat near an edge
+            if abs(shelter_x) + abs(shelter_y) > self.config.SHELTER_MIN_EDGE_DISTANCE:
                 return shelter_x, shelter_y
 
     def _generate_base_terrain(self, xx, yy, shelter_coords_logical):
@@ -96,7 +102,7 @@ class MapGenerator:
         detail_noise_map,
     ):
         """Generates the attenuation mask for the safe corridor."""
-        map_for_pathfinding = shelter_map  # Pathfind on the smooth main basin
+        map_for_pathfinding = shelter_map  # Pathfind on smooth map
         map_for_start_search = (
             shelter_map + detail_noise_map
         )  # Find start on detailed map
@@ -112,24 +118,29 @@ class MapGenerator:
 
     def _generate_and_attenuate_traps(self, xx, yy, width, height, attenuation_mask):
         """Generates the trap map and applies the corridor attenuation."""
+        # Generate traps at their full, original depth
         traps_map, _ = self._generate_traps(xx, yy, width, height)
+        # Apply attenuation element-wise
         return traps_map * attenuation_mask
 
     def _combine_and_finalize_map(
         self,
         shelter_map,
         traps_map,
-        detail_noise_map,
+        detail_noise_map,  # Removed camouflage
         shelter_coords_logical,
         width,
         height,
     ):
         """Combines all map layers and normalizes them into a TerrainMap object."""
+        # Simple summation: Base Sink + Weakened Traps + Global Noise Texture
         total_map_float = shelter_map + traps_map + detail_noise_map
 
         shelter_x_logical, shelter_y_logical = shelter_coords_logical
         shelter_px_x = int((shelter_x_logical + 5) / 10.0 * (width - 1))
         shelter_px_y = int((shelter_y_logical + 5) / 10.0 * (height - 1))
+        shelter_px_x = np.clip(shelter_px_x, 0, width - 1)
+        shelter_px_y = np.clip(shelter_px_y, 0, height - 1)
         shelter_idx = (shelter_px_y, shelter_px_x)
 
         normalized_map = self._normalize_to_255(total_map_float, shelter_idx)
@@ -141,9 +152,12 @@ class MapGenerator:
         return terrain_map, (shelter_px_x, shelter_px_y)
 
     def _create_warped_gaussian_basin(self, xx, yy, cx, cy, depth, width):
+        """Creates a negative gaussian with irregular edges."""
         warp_freq = self.config.BASIN_WARP_FREQUENCY
         warp_amp = self.config.BASIN_WARP_AMPLITUDE
         points = np.stack([xx.ravel() * warp_freq, yy.ravel() * warp_freq], axis=1)
+
+        # Use loops as fallback for perlin-noise library
         x_warp_vals = (
             np.array([self.warp_noise_x(p.tolist()) for p in points]).reshape(xx.shape)
             * warp_amp
@@ -152,13 +166,17 @@ class MapGenerator:
             np.array([self.warp_noise_y(p.tolist()) for p in points]).reshape(yy.shape)
             * warp_amp
         )
+
         xx_warped = xx + x_warp_vals
         yy_warped = yy + y_warp_vals
-        return -depth * np.exp(
-            -((xx_warped - cx) ** 2 + (yy_warped - cy) ** 2) / width**2
+        safe_depth = max(0, depth)
+        safe_width_sq = max(width**2, 1e-6)
+        return -safe_depth * np.exp(
+            -((xx_warped - cx) ** 2 + (yy_warped - cy) ** 2) / safe_width_sq
         )
 
     def _generate_traps(self, xx, yy, width, height):
+        """Generates the trap layer at FULL strength."""
         area = width * height
         num_traps_base = int(area * self.config.TRAP_DENSITY)
         num_traps = max(1, random.randint(num_traps_base - 1, num_traps_base + 2))
@@ -171,30 +189,52 @@ class MapGenerator:
             trap_width = random.uniform(
                 self.config.TRAP_WIDTH_MIN, self.config.TRAP_WIDTH_MAX
             )
+            safe_trap_width = max(trap_width, 1e-6)
             traps_map += self._create_warped_gaussian_basin(
-                xx, yy, trap_x, trap_y, base_trap_depth, trap_width
+                xx, yy, trap_x, trap_y, base_trap_depth, safe_trap_width
             )
             trap_coords.append((trap_x, trap_y))
         return traps_map, trap_coords
 
     def _generate_detail_noise(self, xx, yy):
+        """Generates the fine-detail noise layer."""
         seed = random.randint(0, 100000)
         noise_base = PerlinNoise(octaves=self.config.DETAIL_NOISE_OCTAVES, seed=seed)
         noise_map = np.zeros_like(xx)
         freq = self.config.DETAIL_NOISE_FREQUENCY
         amp = self.config.DETAIL_NOISE_AMPLITUDE
         points = np.stack([xx.ravel() * freq, yy.ravel() * freq], axis=1)
+
+        # Use loops as fallback for perlin-noise library
         noise_vals = np.array([noise_base(p.tolist()) for p in points]).reshape(
             xx.shape
         )
+
         noise_map = noise_vals * amp
         return noise_map
 
     def _normalize_to_255(self, data, shelter_idx):
+        """Normalizes data ensuring the shelter is the minimum value."""
+        shelter_idx = (
+            np.clip(shelter_idx[0], 0, data.shape[0] - 1),
+            np.clip(shelter_idx[1], 0, data.shape[1] - 1),
+        )
         min_val = data[shelter_idx]
         max_val = np.max(data)
+
         if max_val <= min_val:
+            if np.allclose(data, min_val):
+                return np.full_like(data, 128, dtype=np.uint8)
+            else:
+                max_val, min_val = (
+                    min_val,
+                    max_val,
+                )  # Swap if max is slightly lower due to noise
+
+        scale = max_val - min_val
+        if scale < 1e-9:
             return np.full_like(data, 128, dtype=np.uint8)
-        normalized = 255 * (data - min_val) / (max_val - min_val)
-        normalized[normalized < 0] = 0
+
+        normalized = 255 * (data - min_val) / scale
+        normalized = np.clip(normalized, 0, 255)
         return normalized.astype(np.uint8)
