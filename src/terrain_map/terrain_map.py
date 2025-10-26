@@ -25,15 +25,7 @@ class TerrainMap:
         self.width = self.height_data.shape[1]
         self.height = self.height_data.shape[0]
 
-        # Pre-calculate the gradient fields for the entire map
-        # We use sobel filter for a fast, numerical gradient approximation.
-        # Note: We use float32 for the gradients to handle slopes precisely.
         map_float = self.height_data.astype(np.float32)
-
-        # # self.gradient_y corresponds to df/dy (changes along axis 0)
-        # self.gradient_y = sobel(map_float, axis=0)
-        # # self.gradient_x corresponds to df/dx (changes along axis 1)
-        # self.gradient_x = sobel(map_float, axis=1)
 
     def get_gradient_at(self, x, y):
         """
@@ -48,8 +40,6 @@ class TerrainMap:
             np.array: The gradient vector [df/dx, df/dy]. Returns [0, 0] if out of bounds.
         """
         if 0 <= x < self.width and 0 <= y < self.height:
-            # Return as [df/dx, df/dy]
-            # Note the indexing: numpy is [row, col] -> [y, x]
             gx = self.gradient_x[y, x]
             gy = self.gradient_y[y, x]
             return np.array([gx, gy])

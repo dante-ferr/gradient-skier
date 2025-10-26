@@ -175,8 +175,8 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
 
-    MAP_WIDTH = 200
-    MAP_HEIGHT = 200
+    MAP_WIDTH = 75
+    MAP_HEIGHT = 75
     Z_SCALE = 0.5  # Increased default Z_SCALE for better 3D visualization
 
     print(f"--- Generating Test Map ({MAP_WIDTH}x{MAP_HEIGHT}) ---")

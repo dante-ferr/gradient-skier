@@ -32,10 +32,3 @@ class Config:
         if new_config_dict:
             for key, value in new_config_dict.items():
                 setattr(self, key, value)
-
-
-# Create a default generator config instance to be imported by other modules.
-# This assumes the config file is in the same directory as this loader.
-_config_dir = Path(__file__).parent
-generator_config_path = _config_dir / "generator_config.json"
-generator_config = Config(generator_config_path)
