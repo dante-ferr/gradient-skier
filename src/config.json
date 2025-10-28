@@ -1,0 +1,7 @@
+{
+  "min_canvas_zoom": 2,
+  "max_canvas_zoom": 5,
+  "initial_canvas_zoom": 2,
+  "map_width": 50,
+  "map_height": 50
+}

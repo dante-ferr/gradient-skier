@@ -1,0 +1,9 @@
+{
+  "include": ["."],
+  "extraPaths": [
+    "./src",
+    "./src/core",
+    "./src/core/loaders",
+    "./src/core/state_managers"
+  ]
+}

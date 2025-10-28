@@ -11,6 +11,10 @@ run:
 	@echo "--- Running Main Application ---"
 	poetry run python src/main.py
 
+generate-and-save-map:
+	@echo "--- Generating map then saving it in the data folder ---"
+	poetry run python src/generate_and_save_map.py
+
 test-map:
 	@echo "--- Running Map Generation Visual Test (2D) ---"
 	poetry run python src/test_and_plot_map.py

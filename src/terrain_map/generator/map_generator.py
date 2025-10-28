@@ -1,9 +1,12 @@
 import numpy as np
 import random
 from perlin_noise import PerlinNoise
+from typing import Any, Dict, Optional, Tuple
+
 from terrain_map import TerrainMap
 from .generator_config import generator_config
 from ._corridor_generator import CorridorGenerator
+
 
 class MapGenerator:
     """
@@ -12,8 +15,8 @@ class MapGenerator:
     and only attenuating the traps within the corridor.
     """
 
-    def __init__(self, config_override=None):
-        self.config = generator_config
+    def __init__(self, config_override: Optional[Dict[str, Any]] = None):
+        self.config: Any = generator_config
         if config_override:
             for key, value in config_override.items():
                 if hasattr(self.config, key):
@@ -31,12 +34,16 @@ class MapGenerator:
         # Corridor generator
         self.corridor_generator = CorridorGenerator(self.config)
 
-    def generate(self, width, height):
+    def generate(
+        self, width: int, height: int
+    ) -> Tuple[TerrainMap, np.ndarray[Any, np.dtype[np.float64]]]:
         """
         The main public method. Generates and returns a new TerrainMap and attenuation mask.
         """
-        xx, yy = np.meshgrid(np.linspace(-5, 5, width), np.linspace(-5, 5, height))
-        shelter_coords_logical = self._find_shelter_location()
+        xx, yy = np.meshgrid(
+            np.linspace(-5, 5, width), np.linspace(-5, 5, height), indexing="xy"
+        )
+        shelter_coords_logical: Tuple[float, float] = self._find_shelter_location()
 
         # 1. Generate base terrain (shelter + detail noise)
         shelter_map, detail_noise_map = self._generate_base_terrain(
@@ -68,7 +75,7 @@ class MapGenerator:
             attenuation_mask,
         )
 
-    def _find_shelter_location(self):
+    def _find_shelter_location(self) -> Tuple[float, float]:
         """Finds a random location for the shelter near an edge."""
         while True:
             shelter_x = random.uniform(-5, 5)
@@ -77,7 +84,12 @@ class MapGenerator:
             if abs(shelter_x) + abs(shelter_y) > self.config.SHELTER_MIN_EDGE_DISTANCE:
                 return shelter_x, shelter_y
 
-    def _generate_base_terrain(self, xx, yy, shelter_coords_logical):
+    def _generate_base_terrain(
+        self,
+        xx: np.ndarray,
+        yy: np.ndarray,
+        shelter_coords_logical: Tuple[float, float],
+    ) -> Tuple[np.ndarray, np.ndarray]:
         """Generates the main shelter basin and the fine detail noise."""
         shelter_x, shelter_y = shelter_coords_logical
         shelter_map = self._create_warped_gaussian_basin(
@@ -93,14 +105,14 @@ class MapGenerator:
 
     def _generate_corridor_mask(
         self,
-        width,
-        height,
-        xx,
-        yy,
-        shelter_coords_logical,
-        shelter_map,
-        detail_noise_map,
-    ):
+        width: int,
+        height: int,
+        xx: np.ndarray,
+        yy: np.ndarray,
+        shelter_coords_logical: Tuple[float, float],
+        shelter_map: np.ndarray,
+        detail_noise_map: np.ndarray,
+    ) -> np.ndarray:
         """Generates the attenuation mask for the safe corridor."""
         map_for_pathfinding = shelter_map  # Pathfind on smooth map
         map_for_start_search = (
@@ -116,7 +128,14 @@ class MapGenerator:
             map_for_start_search,
         )
 
-    def _generate_and_attenuate_traps(self, xx, yy, width, height, attenuation_mask):
+    def _generate_and_attenuate_traps(
+        self,
+        xx: np.ndarray,
+        yy: np.ndarray,
+        width: int,
+        height: int,
+        attenuation_mask: np.ndarray,
+    ) -> np.ndarray:
         """Generates the trap map and applies the corridor attenuation."""
         # Generate traps at their full, original depth
         traps_map, _ = self._generate_traps(xx, yy, width, height)
@@ -125,13 +144,13 @@ class MapGenerator:
 
     def _combine_and_finalize_map(
         self,
-        shelter_map,
-        traps_map,
-        detail_noise_map,  # Removed camouflage
-        shelter_coords_logical,
-        width,
-        height,
-    ):
+        shelter_map: np.ndarray,
+        traps_map: np.ndarray,
+        detail_noise_map: np.ndarray,
+        shelter_coords_logical: Tuple[float, float],
+        width: int,
+        height: int,
+    ) -> Tuple[TerrainMap, Tuple[int, int]]:
         """Combines all map layers and normalizes them into a TerrainMap object."""
         # Simple summation: Base Sink + Weakened Traps + Global Noise Texture
         total_map_float = shelter_map + traps_map + detail_noise_map
@@ -151,7 +170,15 @@ class MapGenerator:
         )
         return terrain_map, (shelter_px_x, shelter_px_y)
 
-    def _create_warped_gaussian_basin(self, xx, yy, cx, cy, depth, width):
+    def _create_warped_gaussian_basin(
+        self,
+        xx: np.ndarray,
+        yy: np.ndarray,
+        cx: float,
+        cy: float,
+        depth: float,
+        width: float,
+    ) -> np.ndarray:
         """Creates a negative gaussian with irregular edges."""
         warp_freq = self.config.BASIN_WARP_FREQUENCY
         warp_amp = self.config.BASIN_WARP_AMPLITUDE
@@ -175,7 +202,9 @@ class MapGenerator:
             -((xx_warped - cx) ** 2 + (yy_warped - cy) ** 2) / safe_width_sq
         )
 
-    def _generate_traps(self, xx, yy, width, height):
+    def _generate_traps(
+        self, xx: np.ndarray, yy: np.ndarray, width: int, height: int
+    ) -> Tuple[np.ndarray, list[Tuple[float, float]]]:
         """Generates the trap layer at FULL strength."""
         area = width * height
         num_traps_base = int(area * self.config.TRAP_DENSITY)
@@ -196,7 +225,7 @@ class MapGenerator:
             trap_coords.append((trap_x, trap_y))
         return traps_map, trap_coords
 
-    def _generate_detail_noise(self, xx, yy):
+    def _generate_detail_noise(self, xx: np.ndarray, yy: np.ndarray) -> np.ndarray:
         """Generates the fine-detail noise layer."""
         seed = random.randint(0, 100000)
         noise_base = PerlinNoise(octaves=self.config.DETAIL_NOISE_OCTAVES, seed=seed)
@@ -213,7 +242,9 @@ class MapGenerator:
         noise_map = noise_vals * amp
         return noise_map
 
-    def _normalize_to_255(self, data, shelter_idx):
+    def _normalize_to_255(
+        self, data: np.ndarray, shelter_idx: Tuple[int, int]
+    ) -> np.ndarray[Any, np.dtype[np.uint8]]:
         """Normalizes data ensuring the shelter is the minimum value."""
         shelter_idx = (
             np.clip(shelter_idx[0], 0, data.shape[0] - 1),
