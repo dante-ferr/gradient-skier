@@ -4,6 +4,7 @@
     "./src",
     "./src/core",
     "./src/core/loaders",
-    "./src/core/state_managers"
+    "./src/core/state_managers",
+    "./src/core/game"
   ]
 }

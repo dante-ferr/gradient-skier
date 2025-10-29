@@ -36,8 +36,6 @@ class CanvasScroller:
         self.min_zoom = initial_zoom - config.canvas.ZOOM_LEFT_OFFSET
         self.max_zoom = initial_zoom + config.canvas.ZOOM_RIGHT_OFFSET
 
-        print(initial_zoom, self.min_zoom, self.max_zoom)
-
         self._bind_scroll_events()
 
         self._set_zoom(initial_zoom, self.canvas_size[0] // 2, self.canvas_size[1] // 2)
@@ -145,7 +143,6 @@ class CanvasScroller:
         new_zoom = int(new_zoom)
         new_zoom = max(self.min_zoom, min(self.max_zoom, new_zoom))
         if new_zoom != self.canvas.zoom_level:
-            print(new_zoom, origin_x, origin_y)
             self.canvas.set_zoom_level(new_zoom, origin_x, origin_y)
 
     @property

@@ -10,11 +10,15 @@ ctk.set_default_color_theme(str(theme.path))
 class App(ctk.CTk):
 
     def __init__(self):
+        from game import game_manager
+
         super().__init__()
 
         self.title("Gradient Skier")
         self.attributes("-zoomed", True)
         self.minsize(width=800, height=600)
+
+        game_manager.set_root(self)
 
         self.grid_rowconfigure(0, weight=1)
         self.grid_columnconfigure(0, weight=1)

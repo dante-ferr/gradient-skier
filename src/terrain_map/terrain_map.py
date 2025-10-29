@@ -1,7 +1,8 @@
 import numpy as np
 import json
 import os
-from typing import Any, Tuple
+from typing import Any, Tuple, Set, Deque
+from collections import deque
 from PIL import Image
 from scipy.ndimage import sobel
 
@@ -41,6 +42,11 @@ class TerrainMap:
         self.gradient_y: np.ndarray = sobel(map_float, axis=0)
         # self.gradient_x corresponds to df/dx (changes along axis 1)
         self.gradient_x: np.ndarray = sobel(map_float, axis=1)
+
+        # Pre-calculate all contiguous global minima coordinates
+        self._global_minima_coords: Set[Tuple[int, int]] = (
+            self._find_all_global_minima()
+        )
 
     def get_gradient_at(self, x: int, y: int) -> np.ndarray:
         """
@@ -97,6 +103,65 @@ class TerrainMap:
         Returns the (x, y) pixel coordinates of the shelter.
         """
         return self.shelter_coords
+
+    def _find_all_global_minima(self) -> Set[Tuple[int, int]]:
+        """
+        Performs a Breadth-First Search (BFS) starting from the designated shelter
+        to find all contiguous coordinates that share the same minimum height.
+
+        This ensures that any point identified as a global minimum is indeed
+        part of the lowest basin connected to the shelter.
+
+        Returns:
+            Set[Tuple[int, int]]: A set of (x, y) coordinates that are part of the
+                                  global minimum region.
+        """
+        global_minima_set: Set[Tuple[int, int]] = set()
+        q: Deque[Tuple[int, int]] = deque()
+
+        shelter_x, shelter_y = self.shelter_coords
+        min_height = self.get_height_at(shelter_x, shelter_y)
+
+        # Start BFS from the shelter
+        q.append((shelter_x, shelter_y))
+        global_minima_set.add((shelter_x, shelter_y))
+
+        # Define possible neighbor movements (4-directional: right, left, down, up)
+        neighbors = [(1, 0), (-1, 0), (0, 1), (0, -1)]
+
+        while q:
+            cx, cy = q.popleft()
+
+            for dx, dy in neighbors:
+                nx, ny = cx + dx, cy + dy
+
+                # Check bounds
+                if not (0 <= nx < self.width and 0 <= ny < self.height):
+                    continue
+
+                # Check if neighbor has the same minimum height and hasn't been visited
+                if (nx, ny) not in global_minima_set and self.get_height_at(
+                    nx, ny
+                ) == min_height:
+                    global_minima_set.add((nx, ny))
+                    q.append((nx, ny))
+
+        return global_minima_set
+
+    def is_global_minimum(self, x: int, y: int) -> bool:
+        """
+        Checks if a given coordinate is part of the global minimum region.
+        This includes the designated shelter and any contiguous points
+        at the same minimum altitude.
+
+        Args:
+            x (int): The x-coordinate (column).
+            y (int): The y-coordinate (row).
+
+        Returns:
+            bool: True if the point is part of the global minimum region, False otherwise.
+        """
+        return (x, y) in self._global_minima_coords
 
     def get_as_image(self) -> Image.Image:
         """

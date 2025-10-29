@@ -1,5 +1,6 @@
 import customtkinter as ctk
 from .bottom_frame import BottomFrame
+from interface.components.emoji_pin import EmojiPin
 
 class Sidebar(ctk.CTkFrame):
     def __init__(self, parent):
