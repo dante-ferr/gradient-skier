@@ -1,7 +1,9 @@
 {
-  "min_canvas_zoom": 2,
-  "max_canvas_zoom": 5,
-  "initial_canvas_zoom": 2,
+  "canvas": {
+    "steps_per_scroll": 2,
+    "zoom_left_offset": 6,
+    "zoom_right_offset": 6
+  },
   "map_width": 50,
   "map_height": 50
 }

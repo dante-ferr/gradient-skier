@@ -75,6 +75,11 @@ class CanvasRenderer:
             new_photo_image = ImageTk.PhotoImage(scaled_pil_image)
             self.image_cache[cache_key] = new_photo_image
 
+        # Reposition the image to keep the origin point stationary
+        old_coords = self.canvas.coords(tag)
+        old_x, old_y = old_coords if old_coords else (0, 0)
+        self.canvas.coords(tag, old_x, old_y)
+
         self.canvas.itemconfig(tag, image=new_photo_image)
         # Keep a reference to the new image to prevent garbage collection
         self.current_photo_images[tag] = new_photo_image
