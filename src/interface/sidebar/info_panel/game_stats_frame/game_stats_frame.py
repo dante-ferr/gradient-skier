@@ -26,7 +26,9 @@ class GameStatsFrame(ctk.CTkFrame):
         first_victory_display_label.pack(padx=(0, 4), anchor="w")
 
         def _update_first_victory_display(value: int):
-            if value != -1:
+            if value == -1:
+                first_victory_display_label.configure(text="")
+            else:
                 first_victory_display_label.configure(
                     text=f"Attempts for 1st Win: {int(value)}"
                 )
