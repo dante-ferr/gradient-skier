@@ -7,23 +7,30 @@ class InfoPanel(ctk.CTkFrame):
     def __init__(self, parent):
         super().__init__(parent, fg_color="transparent")
 
-        game_stats_frame = GameStatsFrame(self)
-        game_stats_frame.pack(fill="x", padx=32, pady=32)
+        self.grid_columnconfigure((0, 1), weight=1)
+        self.grid_rowconfigure(0, weight=1)
+        self.grid_rowconfigure(1, weight=0)  # Let the bottom frame take its own height
 
-        right_frame = ctk.CTkFrame(self, fg_color="transparent")
-        right_frame.pack(fill="x", padx=32, pady=32, side="right")
+        game_stats_frame = GameStatsFrame(self)
+        game_stats_frame.grid(row=0, column=0, padx=32, pady=32, sticky="nsew")
+
+        button_frame = ctk.CTkFrame(self, fg_color="transparent")
+        button_frame.grid(row=0, column=1, padx=32, pady=32, sticky="ne")
 
         restart_button = ctk.CTkButton(
-            right_frame, text="Restart", font=("", 16), command=self._restart
+            button_frame,
+            text="Start New Game",
+            font=("", 16),
+            command=self._start_new_game,
         )
-        restart_button.pack(fill="x", pady=4)
+        restart_button.pack(expand=True)
 
         self.bottom_frame = BottomFrame(self)
-        self.bottom_frame.pack(side="bottom", fill="x", padx=32, pady=32)
+        self.bottom_frame.grid(
+            row=1, column=0, columnspan=2, padx=32, pady=32, sticky="ew"
+        )
 
-    def _restart(self):
+    def _start_new_game(self):
         from state_managers import game_state_manager
 
-        # game_state_manager.restart()
-
-        pass
+        # game_state_manager.start_new_game()
