@@ -1,7 +1,7 @@
 from ._match import Match
 from config import config
 import customtkinter as ctk
-from typing import Callable
+from typing import Callable, cast
 
 
 class GameManager:
@@ -28,6 +28,8 @@ class GameManager:
             self.match.render_callback = self.render_callback
 
     def _step_match(self):
+        from state_managers import game_state_manager
+
         if not self.match:
             print("Match ended or not started.")
             return
@@ -36,6 +38,25 @@ class GameManager:
 
         if match_finished:
             print("Match finished! Match status:", self.match.status)
+
+            attempts_var = cast(ctk.IntVar, game_state_manager.vars["attempts"])
+            attempts_var.set(attempts_var.get() + 1)
+
+            if self.match.status == "won":
+                won_var = cast(ctk.BooleanVar, game_state_manager.vars["won"])
+
+                if not won_var.get():
+                    attempts_before_first_victory_var = cast(
+                        ctk.IntVar,
+                        game_state_manager.vars["attempts_before_first_victory"],
+                    )
+                    attempts_before_first_victory_var.set(attempts_var.get())
+
+                    won_var.set(True)
+
+            elif self.match.status == "lost":
+                pass
+
             self.match = None
         else:
             # Schedule the next step

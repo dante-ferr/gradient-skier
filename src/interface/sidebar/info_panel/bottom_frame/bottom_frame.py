@@ -13,11 +13,11 @@ class BottomFrame(ctk.CTkFrame):
     def _pack_zoom_slider(self):
         from state_managers import canvas_state_manager
 
-        zoom_container = ctk.CTkFrame(self, fg_color="transparent")
-        zoom_container.pack()
+        zoom_container = ctk.CTkFrame(self, fg_color="transparent", width=64)
+        zoom_container.pack(anchor="w")
 
-        zoom_label = ctk.CTkLabel(zoom_container, text="Zoom")
-        zoom_label.pack(padx=(0, 4), anchor="w")
+        zoom_label = ctk.CTkLabel(zoom_container, text="Zoom", font=("", 16))
+        zoom_label.pack(padx=(0, 4))
 
         number_of_steps = (
             config.canvas.ZOOM_RIGHT_OFFSET + config.canvas.ZOOM_LEFT_OFFSET
@@ -30,7 +30,7 @@ class BottomFrame(ctk.CTkFrame):
             width=128,
             command=self._handle_zoom,
         )
-        zoom_slider.pack()
+        zoom_slider.pack(fill="x")
 
         def _callback(value):
             zoom_slider.set(self._actual_zoom_to_slider_zoom(value))

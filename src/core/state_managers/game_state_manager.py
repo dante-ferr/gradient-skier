@@ -2,7 +2,7 @@ import customtkinter as ctk
 from .state_manager import StateManager
 
 
-class CanvasStateManager(StateManager):
+class GameStateManager(StateManager):
     """A centralized state manager for canvas-related UI properties."""
 
     def __init__(self):
@@ -10,10 +10,11 @@ class CanvasStateManager(StateManager):
 
         self._initialize_state(
             {
-                "zoom": ctk.DoubleVar(value=1.0),
-                "initial_zoom": ctk.IntVar(value=1),
+                "attempts": ctk.IntVar(value=0),
+                "won": ctk.BooleanVar(value=False),
+                "attempts_before_first_victory": ctk.IntVar(value=-1),
             }
         )
 
 
-canvas_state_manager = CanvasStateManager()
+game_state_manager = GameStateManager()

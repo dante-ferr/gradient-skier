@@ -4,7 +4,7 @@ from typing import Callable, Dict, Any, Union
 CtkVariable = Union[ctk.BooleanVar, ctk.StringVar, ctk.IntVar, ctk.DoubleVar]
 
 
-class BaseStateManager:
+class StateManager:
     """A base class for centralized state management of UI properties."""
 
     def __init__(self):

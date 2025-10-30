@@ -21,8 +21,8 @@ class App(ctk.CTk):
         game_manager.set_root(self)
 
         self.grid_rowconfigure(0, weight=1)
-        self.grid_columnconfigure(0, weight=1)
-        self.grid_columnconfigure(1, weight=0, minsize=256)
+        self.grid_columnconfigure(0, weight=5)
+        self.grid_columnconfigure(1, weight=2)
 
         left_frame = ctk.CTkFrame(self, fg_color="transparent")
         left_frame.grid(row=0, column=0, sticky="nsew")
@@ -34,4 +34,4 @@ class App(ctk.CTk):
         canvas.grid(row=1, column=0, sticky="nsew")
 
         sidebar = Sidebar(self)
-        sidebar.grid(row=0, column=1, sticky="ns", padx=16, pady=32)
+        sidebar.grid(row=0, column=1, sticky="nsew", padx=0, pady=0)
