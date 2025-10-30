@@ -37,7 +37,7 @@ class MapCanvas(ctk.CTkCanvas):
 
         self.configure(bg="black")
 
-        game_manager.render_callback = self._match_render_callback
+        game_manager.add_on_step_callback(self._match_render_callback)
         game_manager.match_start_callback = self._match_start_callback
 
     def _match_start_callback(self):

@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, Callable, Literal
+from typing import TYPE_CHECKING, Literal
 import numpy as np
 
 if TYPE_CHECKING:
@@ -17,7 +17,6 @@ class Match:
     ):
         self.skier_position: tuple[float, float] = skier_starting_position
         self.terrain_map: "TerrainMap" = terrain_map
-        self.render_callback: Callable | None = None
         self.path_history: list[tuple[float, float]] = [skier_starting_position]
 
         self.status: Literal["playing", "won", "lost"] = "playing"
@@ -28,9 +27,6 @@ class Match:
         if self.skier_position == self.terrain_map.get_shelter_coords():
             self.status = "won"
             return True
-
-        if self.render_callback:
-            self.render_callback(self)
 
         self._move_skier()
 

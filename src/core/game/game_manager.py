@@ -1,15 +1,18 @@
 from ._match import Match
 from config import config
 import customtkinter as ctk
-from typing import Callable, cast
+from typing import Callable, cast, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from ._match import Match
 
 
 class GameManager:
     def __init__(self):
         self.match: "Match | None" = None
         self.root: ctk.CTk | None = None
-        self.render_callback: Callable | None = None
         self.match_start_callback: Callable | None = None
+        self.on_step_callbacks: list[Callable[["Match"], None]] = []
 
     def set_root(self, root: ctk.CTk):
         self.root = root
@@ -25,7 +28,8 @@ class GameManager:
             if self.match_start_callback:
                 self.match_start_callback()
 
-            self.match.render_callback = self.render_callback
+    def add_on_step_callback(self, callback: Callable[["Match"], None]):
+        self.on_step_callbacks.append(callback)
 
     def _step_match(self):
         from state_managers import game_state_manager
@@ -35,6 +39,9 @@ class GameManager:
             return
 
         match_finished = self.match.step()
+
+        for callback in self.on_step_callbacks:
+            callback(self.match)
 
         if match_finished:
             print("Match finished! Match status:", self.match.status)
