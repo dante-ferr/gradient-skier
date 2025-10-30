@@ -35,8 +35,8 @@ class GameManager:
         match_finished = self.match.step()
 
         if match_finished:
-            print("Match finished! Skier reached the shelter.")
-            self.match = None  # End the match
+            print("Match finished! Match status:", self.match.status)
+            self.match = None
         else:
             # Schedule the next step
             if self.root:
