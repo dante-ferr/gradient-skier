@@ -11,11 +11,25 @@ class GameManager:
     def __init__(self):
         self.match: "Match | None" = None
         self.root: ctk.CTk | None = None
+
         self.match_start_callback: Callable | None = None
         self.on_step_callbacks: list[Callable[["Match"], None]] = []
+        self.on_game_start_callbacks: list[Callable] = []
 
     def set_root(self, root: ctk.CTk):
         self.root = root
+
+    def start_new_game(self):
+        from state_managers import game_state_manager
+        from core import map_manager
+
+        game_state_manager.reset_to_defaults()
+        self.match = None
+
+        map_manager.recreate_map()
+
+        for callback in self.on_game_start_callbacks:
+            callback()
 
     def _start_match(self, player_starting_position: tuple[int, int]):
         from core import map_manager
@@ -31,11 +45,12 @@ class GameManager:
     def add_on_step_callback(self, callback: Callable[["Match"], None]):
         self.on_step_callbacks.append(callback)
 
+    def add_on_game_start_callback(self, callback: Callable):
+        self.on_game_start_callbacks.append(callback)
+
     def _step_match(self):
-        from state_managers import game_state_manager
 
         if not self.match:
-            print("Match ended or not started.")
             return
 
         match_finished = self.match.step()
@@ -44,31 +59,37 @@ class GameManager:
             callback(self.match)
 
         if match_finished:
-            print("Match finished! Match status:", self.match.status)
-
-            attempts_var = cast(ctk.IntVar, game_state_manager.vars["attempts"])
-            attempts_var.set(attempts_var.get() + 1)
-
-            if self.match.status == "won":
-                won_var = cast(ctk.BooleanVar, game_state_manager.vars["won"])
-
-                if not won_var.get():
-                    attempts_before_first_victory_var = cast(
-                        ctk.IntVar,
-                        game_state_manager.vars["attempts_before_first_victory"],
-                    )
-                    attempts_before_first_victory_var.set(attempts_var.get())
-
-                    won_var.set(True)
-
-            elif self.match.status == "lost":
-                pass
-
-            self.match = None
+            self._handle_match_finish()
         else:
             # Schedule the next step
             if self.root:
                 self.root.after(config.game.STEP_INTERVAL, self._step_match)
+
+    def _handle_match_finish(self):
+        from state_managers import game_state_manager
+
+        if not self.match:
+            raise Exception("No match to handle")
+
+        attempts_var = cast(ctk.IntVar, game_state_manager.vars["attempts"])
+        attempts_var.set(attempts_var.get() + 1)
+
+        if self.match.status == "won":
+            won_var = cast(ctk.BooleanVar, game_state_manager.vars["won"])
+
+            if not won_var.get():
+                attempts_before_first_victory_var = cast(
+                    ctk.IntVar,
+                    game_state_manager.vars["attempts_before_first_victory"],
+                )
+                attempts_before_first_victory_var.set(attempts_var.get())
+
+                won_var.set(True)
+
+        elif self.match.status == "lost":
+            pass
+
+        self.match = None
 
     def run_match_simulation(self, start_position: tuple[int, int]):
         if self.root is None:

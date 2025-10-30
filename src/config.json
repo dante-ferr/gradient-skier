@@ -7,6 +7,6 @@
   "game": {
     "step_interval": 50
   },
-  "map_width": 100,
-  "map_height": 100
+  "map_width": 10,
+  "map_height": 10
 }

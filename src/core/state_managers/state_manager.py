@@ -10,11 +10,13 @@ class StateManager:
     def __init__(self):
         self.vars: Dict[str, CtkVariable] = {}
         self._callbacks: Dict[str, list[Callable[[Any], None]]] = {}
+        self._defaults: Dict[str, Any] = {}
 
     def _initialize_state(self, variables: Dict[str, CtkVariable]):
-        """Initializes the state variables and sets up tracing."""
+        """Initializes state variables, stores their initial values as defaults, and sets up tracing."""
         self.vars = variables
         self._callbacks = {name: [] for name in self.vars.keys()}
+        self._defaults = {name: var.get() for name, var in self.vars.items()}
 
         for name, var in self.vars.items():
             var.trace_add("write", lambda *args, n=name: self._notify_callbacks(n))
@@ -35,3 +37,8 @@ class StateManager:
         if name in self._callbacks:
             for callback in self._callbacks[name]:
                 callback(value)
+
+    def reset_to_defaults(self):
+        """Resets all state variables to their default values."""
+        for name, default_value in self._defaults.items():
+            self.vars[name].set(default_value)

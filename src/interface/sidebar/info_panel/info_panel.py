@@ -31,6 +31,6 @@ class InfoPanel(ctk.CTkFrame):
         )
 
     def _start_new_game(self):
-        from state_managers import game_state_manager
+        from game import game_manager
 
-        # game_state_manager.start_new_game()
+        game_manager.start_new_game()

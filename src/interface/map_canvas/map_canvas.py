@@ -10,6 +10,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from game._match import Match
 
+
 class MapCanvas(ctk.CTkCanvas):
     def __init__(self, parent, **kwargs):
         from core import map_manager
@@ -31,8 +32,6 @@ class MapCanvas(ctk.CTkCanvas):
             ),
         )
 
-        # map_manager.recreate_map()
-        map_manager.load_map_from_json()
         self.map_renderer.render_map()
 
         self.configure(bg="black")

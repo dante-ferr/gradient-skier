@@ -11,6 +11,7 @@ class App(ctk.CTk):
 
     def __init__(self):
         from game import game_manager
+        from core import map_manager
 
         super().__init__()
 
@@ -24,14 +25,24 @@ class App(ctk.CTk):
         self.grid_columnconfigure(0, weight=5)
         self.grid_columnconfigure(1, weight=2)
 
-        left_frame = ctk.CTkFrame(self, fg_color="transparent")
-        left_frame.grid(row=0, column=0, sticky="nsew")
-        left_frame.grid_columnconfigure(0, weight=1)
-        left_frame.grid_rowconfigure(0, weight=0)
-        left_frame.grid_rowconfigure(1, weight=1)
-
-        canvas = MapCanvas(left_frame)
-        canvas.grid(row=1, column=0, sticky="nsew")
+        self.left_frame = ctk.CTkFrame(self, fg_color="transparent")
+        self.left_frame.grid(row=0, column=0, sticky="nsew")
+        self.left_frame.grid_columnconfigure(0, weight=1)
+        self.left_frame.grid_rowconfigure(0, weight=0)
+        self.left_frame.grid_rowconfigure(1, weight=1)
 
         sidebar = Sidebar(self)
         sidebar.grid(row=0, column=1, sticky="nsew", padx=0, pady=0)
+
+        map_manager.load_map_from_json()
+
+        self.canvas: MapCanvas | None = None
+        game_manager.add_on_game_start_callback(self._game_start_callback)
+        self._game_start_callback()
+
+    def _game_start_callback(self):
+        if self.canvas is not None:
+            self.canvas.grid_forget()
+            self.canvas.pack_forget()
+        self.canvas = MapCanvas(self.left_frame)
+        self.canvas.grid(row=1, column=0, sticky="nsew")

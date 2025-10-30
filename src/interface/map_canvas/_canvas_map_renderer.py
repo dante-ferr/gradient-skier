@@ -19,12 +19,14 @@ class CanvasMapRenderer:
         self.original_pil_images = {}
         self.current_photo_images = {}
 
-        map_manager.add_map_recreate_callback(self._clean_cache)
+        # map_manager.add_map_recreate_callback(self._rerender_map)
 
-    def _clean_cache(self):
-        self.image_cache = {}
-        self.original_pil_images = {}
-        self.current_photo_images = {}
+    # def _rerender_map(self):
+    #     self.image_cache = {}
+    #     self.original_pil_images = {}
+    #     self.current_photo_images = {}
+
+    #     self.render_map()
 
     def render_map(self):
         """Generates a new map and renders it on the canvas."""
@@ -34,7 +36,7 @@ class CanvasMapRenderer:
 
         # Normalize height data (0-1) and apply a colormap (e.g., terrain)
         height_data = terrain_map.height_data
-        colored_data = cm.terrain(height_data / 255.0)
+        colored_data = cm.terrain(height_data / 255.0)  # type: ignore
 
         # Convert to an 8-bit RGBA image that PIL/Tkinter can use
         image_data = (colored_data * 255).astype(np.uint8)
@@ -70,7 +72,7 @@ class CanvasMapRenderer:
 
             # Use NEAREST for sharp pixels, which is good for this type of map
             scaled_pil_image = original_pil_image.resize(
-                (new_width, new_height), Image.NEAREST
+                (new_width, new_height), Image.NEAREST  # type: ignore
             )
             new_photo_image = ImageTk.PhotoImage(scaled_pil_image)
             self.image_cache[cache_key] = new_photo_image
