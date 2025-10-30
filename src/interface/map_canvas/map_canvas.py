@@ -27,7 +27,7 @@ class MapCanvas(ctk.CTkCanvas):
         self.after(
             400,
             lambda: self.pins_renderer.render_pin(
-                map_manager.map.shelter_coords, "🏕️", pin_id="shelter"
+                map_manager.map.shelter_coords, "🏕️", pin_id="shelter"  # type: ignore
             ),
         )
 
@@ -69,6 +69,8 @@ class MapCanvas(ctk.CTkCanvas):
 
         self.map_renderer.rescale()
         self.path_renderer.rescale()
+        self.pins_renderer.rescale()
+
         self.scroller.last_x -= int(dx)
         self.scroller.last_y -= int(dy)
         self.scan_dragto(self.scroller.last_x, self.scroller.last_y, gain=1)

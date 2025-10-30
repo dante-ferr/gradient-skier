@@ -47,3 +47,11 @@ class CanvasPinsRenderer:
                 "canvas_item_id": canvas_item_id,
                 "map_pos": position,
             }
+
+    def rescale(self):
+        for pin_id, pin_info in self.pins.items():
+            map_x, map_y = pin_info["map_pos"]
+            zoom = self.canvas.zoom_level
+            canvas_x = map_x * zoom
+            canvas_y = map_y * zoom
+            self.canvas.coords(pin_id, canvas_x, canvas_y)
