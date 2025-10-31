@@ -1,17 +1,12 @@
 from typing import TYPE_CHECKING, Literal
 import numpy as np
+from config import config
 
 if TYPE_CHECKING:
     from terrain_map import TerrainMap
 
 
 class Match:
-    # Number of consecutive steps within the same integer coordinate to be considered stuck.
-    STUCK_AREA_STEPS = 10
-    # The radius (in pixels) to check for confinement. If the skier hasn't moved
-    # outside a box of this size for STUCK_AREA_STEPS, they are considered stuck.
-    STUCK_AREA_RADIUS = 2.0
-
     def __init__(
         self, skier_starting_position: tuple[int, int], terrain_map: "TerrainMap"
     ):
@@ -41,10 +36,12 @@ class Match:
         Checks if the skier has been confined to a small area for the last
         `STUCK_AREA_STEPS` steps, indicating they are stuck.
         """
-        if len(self.path_history) < self.STUCK_AREA_STEPS:
+        stuck_steps = config.game.STUCK_AREA_STEPS
+        stuck_radius = config.game.STUCK_AREA_RADIUS
+        if len(self.path_history) < stuck_steps:
             return False
 
-        recent_path = self.path_history[-self.STUCK_AREA_STEPS :]
+        recent_path = self.path_history[-stuck_steps:]
 
         # Calculate the bounding box of the recent path
         min_x = min(p[0] for p in recent_path)
@@ -53,12 +50,8 @@ class Match:
         max_y = max(p[1] for p in recent_path)
 
         # If the bounding box is smaller than the defined radius, the skier is stuck.
-        if (max_x - min_x) < self.STUCK_AREA_RADIUS and (
-            max_y - min_y
-        ) < self.STUCK_AREA_RADIUS:
-            print(
-                f"Skier is stuck in an area for {self.STUCK_AREA_STEPS} steps! Match lost."
-            )
+        if (max_x - min_x) < stuck_radius and (max_y - min_y) < stuck_radius:
+            print(f"Skier is stuck in an area for {stuck_steps} steps! Match lost.")
             return True
 
         return False
@@ -93,6 +86,12 @@ class Match:
             self.skier_position[0] + move_vector[0],
             self.skier_position[1] + move_vector[1],
         )
+
+        # Clamp the new position to stay within the map boundaries
+        clamped_x = np.clip(new_position[0], 0, self.terrain_map.width - 1)
+        clamped_y = np.clip(new_position[1], 0, self.terrain_map.height - 1)
+
+        new_position = (clamped_x, clamped_y)
 
         self.skier_position = new_position
         self.path_history.append(self.skier_position)

@@ -142,7 +142,6 @@ class CanvasScroller:
         """Clamp new_zoom and execute the zoom at each frame."""
         new_zoom = int(new_zoom)
         new_zoom = max(self.min_zoom, min(self.max_zoom, new_zoom))
-        print(new_zoom, self.canvas.zoom_level)
         if new_zoom != self.canvas.zoom_level:
             self.canvas.set_zoom_level(new_zoom, origin_x, origin_y)
 

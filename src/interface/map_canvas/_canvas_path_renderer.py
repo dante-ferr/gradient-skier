@@ -33,7 +33,7 @@ class CanvasPathRenderer:
         canvas_coords = [
             coord
             for point in path_points
-            for coord in (point[0] * zoom, point[1] * zoom)
+            for coord in ((point[0] + 0.5) * zoom, (point[1] + 0.5) * zoom)
         ]
 
         self.canvas.create_line(

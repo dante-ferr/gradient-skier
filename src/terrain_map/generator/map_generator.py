@@ -43,7 +43,9 @@ class MapGenerator:
         xx, yy = np.meshgrid(
             np.linspace(-5, 5, width), np.linspace(-5, 5, height), indexing="xy"
         )
-        shelter_coords_logical: Tuple[float, float] = self._find_shelter_location()
+        shelter_coords_logical: Tuple[float, float] = self._find_shelter_location(
+            width, height
+        )
 
         # 1. Generate base terrain (shelter + detail noise)
         shelter_map, detail_noise_map = self._generate_base_terrain(
@@ -75,12 +77,26 @@ class MapGenerator:
             attenuation_mask,
         )
 
-    def _find_shelter_location(self) -> Tuple[float, float]:
-        """Finds a random location for the shelter near an edge."""
+    def _find_shelter_location(self, width: int, height: int) -> Tuple[float, float]:
+        """Finds a random location for the shelter, respecting border constraints."""
+        # Convert pixel distance to logical distance
+        # The logical space is 10 units wide/high (-5 to 5)
+        border_dist_x_logical = (
+            self.config.SHELTER_BORDER_MIN_DISTANCE / (width - 1)
+        ) * 10.0
+        border_dist_y_logical = (
+            self.config.SHELTER_BORDER_MIN_DISTANCE / (height - 1)
+        ) * 10.0
+
         while True:
-            shelter_x = random.uniform(-5, 5)
-            shelter_y = random.uniform(-5, 5)
-            # Ensure shelter is somewhat near an edge
+            # Generate coordinates within the allowed logical range
+            shelter_x = random.uniform(
+                -5 + border_dist_x_logical, 5 - border_dist_x_logical
+            )
+            shelter_y = random.uniform(
+                -5 + border_dist_y_logical, 5 - border_dist_y_logical
+            )
+            # Also ensure shelter is somewhat near an edge (away from the center)
             if abs(shelter_x) + abs(shelter_y) > self.config.SHELTER_MIN_EDGE_DISTANCE:
                 return shelter_x, shelter_y
 

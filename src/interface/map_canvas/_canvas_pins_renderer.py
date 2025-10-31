@@ -22,10 +22,7 @@ class CanvasPinsRenderer:
             emoji (str): The emoji to display on the pin.
             pin_id (str): A unique identifier for the pin (e.g., 'skier', 'shelter').
         """
-        map_x, map_y = position
-        zoom = self.canvas.zoom_level
-        canvas_x = map_x * zoom
-        canvas_y = map_y * zoom
+        canvas_x, canvas_y = self._get_canvas_pos(position)
 
         if pin_id in self.pins:
             # Pin exists, just move it
@@ -50,8 +47,12 @@ class CanvasPinsRenderer:
 
     def rescale(self):
         for pin_id, pin_info in self.pins.items():
-            map_x, map_y = pin_info["map_pos"]
-            zoom = self.canvas.zoom_level
-            canvas_x = map_x * zoom
-            canvas_y = map_y * zoom
+            canvas_x, canvas_y = self._get_canvas_pos(pin_info["map_pos"])
+
             self.canvas.coords(pin_id, canvas_x, canvas_y)
+
+    def _get_canvas_pos(self, map_pos: tuple[float, float]):
+        zoom = self.canvas.zoom_level
+        canvas_x = (map_pos[0] + 0.5) * zoom
+        canvas_y = (map_pos[1] + 0.5) * zoom
+        return canvas_x, canvas_y
