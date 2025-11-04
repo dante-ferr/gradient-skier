@@ -5,6 +5,7 @@
     "zoom_right_offset": 10
   },
   "game": {
+    "use_default_map": false,
     "step_interval": 50,
     "stuck_area_steps": 10,
     "stuck_area_radius": 2.0

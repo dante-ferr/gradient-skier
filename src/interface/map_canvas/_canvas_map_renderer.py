@@ -19,15 +19,6 @@ class CanvasMapRenderer:
         self.original_pil_images = {}
         self.current_photo_images = {}
 
-        # map_manager.add_map_recreate_callback(self._rerender_map)
-
-    # def _rerender_map(self):
-    #     self.image_cache = {}
-    #     self.original_pil_images = {}
-    #     self.current_photo_images = {}
-
-    #     self.render_map()
-
     def render_map(self):
         """Generates a new map and renders it on the canvas."""
         terrain_map = map_manager.map

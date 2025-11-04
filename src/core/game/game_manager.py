@@ -19,6 +19,9 @@ class GameManager:
     def set_root(self, root: ctk.CTk):
         self.root = root
 
+        if not config.game.USE_DEFAULT_MAP:
+            self.start_new_game()
+
     def start_new_game(self):
         from state_managers import game_state_manager
         from core import map_manager
