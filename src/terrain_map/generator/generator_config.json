@@ -31,7 +31,7 @@
   "corridor_lockon_strength": 3.0,
 
   "corridor_start_candidates": 20,
-  "start_altitude_threshold_percent": 0.9,
+  "start_altitude_threshold_percent": 0.85,
 
   "shelter_border_min_distance": 2
 }

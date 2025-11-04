@@ -12,6 +12,7 @@ class CanvasStateManager(StateManager):
             {
                 "zoom": ctk.DoubleVar(value=1.0),
                 "initial_zoom": ctk.IntVar(value=1),
+                "loading": ctk.BooleanVar(value=False),
             }
         )
 

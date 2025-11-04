@@ -31,17 +31,6 @@ class GameManager:
         for callback in self.on_game_start_callbacks:
             callback()
 
-    def _start_match(self, player_starting_position: tuple[int, int]):
-        from core import map_manager
-
-        if not map_manager.map:
-            raise Exception("No map loaded")
-
-        if map_manager.map.is_valid_start_point(*player_starting_position):
-            self.match = Match(player_starting_position, map_manager.map)
-            if self.match_start_callback:
-                self.match_start_callback()
-
     def add_on_step_callback(self, callback: Callable[["Match"], None]):
         self.on_step_callbacks.append(callback)
 
@@ -100,6 +89,17 @@ class GameManager:
         self._start_match(start_position)
         if self.match:
             self._step_match()
+
+    def _start_match(self, player_starting_position: tuple[int, int]):
+        from core import map_manager
+
+        if not map_manager.map:
+            raise Exception("No map loaded")
+
+        if map_manager.map.is_valid_start_point(*player_starting_position):
+            self.match = Match(player_starting_position, map_manager.map)
+            if self.match_start_callback:
+                self.match_start_callback()
 
 
 game_manager = GameManager()

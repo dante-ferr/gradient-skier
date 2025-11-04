@@ -6,7 +6,6 @@ from .map_canvas import MapCanvas
 ctk.set_appearance_mode("Dark")
 ctk.set_default_color_theme(str(theme.path))
 
-
 class App(ctk.CTk):
 
     def __init__(self):
@@ -19,6 +18,7 @@ class App(ctk.CTk):
         self.attributes("-zoomed", True)
         self.minsize(width=800, height=600)
 
+        map_manager.set_root(self)
         game_manager.set_root(self)
 
         self.grid_rowconfigure(0, weight=1)
@@ -31,18 +31,41 @@ class App(ctk.CTk):
         self.left_frame.grid_rowconfigure(0, weight=0)
         self.left_frame.grid_rowconfigure(1, weight=1)
 
+        self.loading_frame = ctk.CTkFrame(self.left_frame, fg_color="transparent")
+        self.loading_label = ctk.CTkLabel(
+            self.loading_frame, text="Generating new map...", font=ctk.CTkFont(size=20)
+        )
+        self.loading_label.pack(pady=10)
+        self.loading_progress = ctk.CTkProgressBar(
+            self.loading_frame, mode="indeterminate"
+        )
+        self.loading_progress.pack(pady=10, padx=20, fill="x")
+
         sidebar = Sidebar(self)
         sidebar.grid(row=0, column=1, sticky="nsew", padx=0, pady=0)
 
         map_manager.load_map_from_json()
 
         self.canvas: MapCanvas | None = None
-        game_manager.add_on_game_start_callback(self._game_start_callback)
-        self._game_start_callback()
 
-    def _game_start_callback(self):
-        if self.canvas is not None:
-            self.canvas.grid_forget()
-            self.canvas.pack_forget()
+        from state_managers import canvas_state_manager
+
+        canvas_state_manager.add_callback("loading", self._on_map_loading)
+
+    def _on_map_loading(self, loading: bool):
+        if loading:
+            if self.canvas is not None:
+                self.canvas.grid_forget()
+
+            self.loading_frame.place(relx=0.5, rely=0.5, anchor="center")
+            self.loading_progress.start()
+        else:
+            self._on_game_start()
+            self.loading_progress.stop()
+            self.loading_frame.place_forget()
+
+    def _on_game_start(self):
         self.canvas = MapCanvas(self.left_frame)
         self.canvas.grid(row=1, column=0, sticky="nsew")
+        # Ensure canvas is drawn under the loading frame if it's active
+        self.loading_frame.lift()
