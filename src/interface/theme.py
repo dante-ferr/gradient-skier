@@ -15,5 +15,5 @@ class Theme:
         self.select_border_color = data["CTkButton"]["border_color"][1]
 
 
-default_theme = "orange"
+default_theme = "rime"
 theme = Theme(default_theme)

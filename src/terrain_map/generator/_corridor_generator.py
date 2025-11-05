@@ -214,9 +214,40 @@ class CorridorGenerator:
         )
         distance_map = self._find_min_distance_to_polyline(xx, yy, polyline)
         t = distance_map / self.config.CORRIDOR_WIDTH
+
+        # Get "hole" shape parameters from config
+        sharpness = self.config.CORRIDOR_HOLE_SHARPNESS
+        flat_ratio = self.config.CORRIDOR_FLAT_BOTTOM_RATIO
+        sharpness = getattr(self.config, "CORRIDOR_WALL_SHARPNESS", 3.0)
+        flat_ratio = getattr(self.config, "CORRIDOR_FLAT_BOTTOM_RATIO", 0.4)
+
+        # Ensure flat_ratio is sane (0.0 to < 1.0)
+        flat_ratio = np.clip(flat_ratio, 0.0, 0.999)
+        denominator = 1.0 - flat_ratio
+
+        # 1. Create the flat bottom
+        # We remap t:
+        # - All values of t below flat_ratio will become 0.
+        # - Values from flat_ratio to 1.0 will be re-scaled to [0.0, 1.0]
+        # Example: if flat_ratio=0.4 and t=0.7:
+        #          (0.7 - 0.4) / (1.0 - 0.4) = 0.3 / 0.6 = 0.5
+        t_remapped = np.clip(t - flat_ratio, 0.0, None) / denominator
+
+        # 2. Create the steep walls
+        # We use an "ease-out" power function (1 - (1-x)^p)
+        # This rises very quickly from 0 and plateaus as it approaches 1.
+        # When t_remapped=0.0 (on the flat bottom), strength_factor=0.0
+        # When t_remapped=0.5 (halfway up the wall), strength_factor=0.875 (if sharpness=3)
+        # When t_remapped=1.0 (at the top edge), strength_factor=1.0
+        strength_factor = 1.0 - (1.0 - t_remapped) ** sharpness
+
+        # 3. Interpolate
+        # strength_factor=0.0 -> mask = MIN_STRENGTH (the flat bottom)
+        # strength_factor=1.0 -> mask = 1.0 (the surface)
         mask = (
             self.config.CORRIDOR_MIN_STRENGTH
-            + (1.0 - self.config.CORRIDOR_MIN_STRENGTH) * t
+            + (1.0 - self.config.CORRIDOR_MIN_STRENGTH) * strength_factor
         )
+
         np.clip(mask, self.config.CORRIDOR_MIN_STRENGTH, 1.0, out=mask)
         return mask

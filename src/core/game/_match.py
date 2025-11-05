@@ -80,7 +80,17 @@ class Match:
             if norm > 0:
                 move_vector = -gradient / norm  # Move against the gradient (downhill)
             else:
-                move_vector = np.array([0.0, 0.0])  # Stuck in a local minimum
+                # Stuck in a local minimum or plateau (zero gradient).
+                # Move towards the shelter as a fallback.
+                shelter_coords = self.terrain_map.get_shelter_coords()
+                direction_vector = np.array(shelter_coords) - np.array(
+                    self.skier_position
+                )
+                distance = np.linalg.norm(direction_vector)
+                if distance > 1:
+                    move_vector = direction_vector / distance
+                else:
+                    move_vector = np.array([0.0, 0.0])  # Very close, no need to move
 
         new_position = (
             self.skier_position[0] + move_vector[0],

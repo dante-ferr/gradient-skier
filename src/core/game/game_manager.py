@@ -25,6 +25,7 @@ class GameManager:
     def start_new_game(self):
         from state_managers import game_state_manager
         from core import map_manager
+        from src.test_and_plot_map import _plot_2d_views
 
         game_state_manager.reset_to_defaults()
         self.match = None

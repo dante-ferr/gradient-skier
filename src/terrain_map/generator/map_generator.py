@@ -3,7 +3,7 @@ import random
 from perlin_noise import PerlinNoise
 from typing import Any, Dict, Optional, Tuple
 
-from terrain_map import TerrainMap
+from terrain_map import TerrainMap  # Make sure this import is correct
 from .generator_config import generator_config
 from ._corridor_generator import CorridorGenerator
 
@@ -70,6 +70,7 @@ class MapGenerator:
             shelter_coords_logical,
             width,
             height,
+            attenuation_mask,  # <-- MODIFIED: Pass the mask here
         )
 
         return (
@@ -166,10 +167,33 @@ class MapGenerator:
         shelter_coords_logical: Tuple[float, float],
         width: int,
         height: int,
+        attenuation_mask: np.ndarray,  # <-- MODIFIED: Add to signature
     ) -> Tuple[TerrainMap, Tuple[int, int]]:
         """Combines all map layers and normalizes them into a TerrainMap object."""
-        # Simple summation: Base Sink + Weakened Traps + Global Noise Texture
-        total_map_float = shelter_map + traps_map + detail_noise_map
+
+        # --- NEW: Create the ravine ---
+        # 1. Get ravine depth from config, default to 0.0 if not present
+        ravine_depth = getattr(self.config, "CORRIDOR_RAVINE_DEPTH", 0.0)
+        ravine_map = np.zeros_like(shelter_map)
+
+        if ravine_depth > 1e-6:
+            # 2. Invert the attenuation_mask to create a "carve mask" (0.0 to 1.0)
+            # attenuation_mask is [MIN_STRENGTH, 1.0] (center -> outside)
+            # We want a carve_mask that is [1.0, 0.0] (center -> outside)
+            min_strength = self.config.CORRIDOR_MIN_STRENGTH
+            # Clamp to prevent division by zero if min_strength is 1.0
+            denominator = max(1.0 - min_strength, 1e-9)
+
+            # (1.0 - attenuation_mask) gives [ (1-MIN_STRENGTH), 0.0 ]
+            # Dividing by denominator normalizes it to [ 1.0, 0.0 ]
+            carve_mask = (1.0 - attenuation_mask) / denominator
+
+            # 3. Create the ravine map by scaling the carve mask
+            ravine_map = carve_mask * ravine_depth
+        # --- END NEW ---
+
+        # MODIFIED: Subtract the ravine map
+        total_map_float = shelter_map + traps_map + detail_noise_map - ravine_map
 
         shelter_x_logical, shelter_y_logical = shelter_coords_logical
         shelter_px_x = int((shelter_x_logical + 5) / 10.0 * (width - 1))
@@ -267,16 +291,33 @@ class MapGenerator:
             np.clip(shelter_idx[1], 0, data.shape[1] - 1),
         )
         min_val = data[shelter_idx]
+
+        # --- MODIFICATION ---
+        # Find the max_val *before* clipping the shelter
+        # This prevents the ravine from accidentally becoming the max value
         max_val = np.max(data)
 
+        # Ensure shelter is truly the lowest point after carving
+        if data[shelter_idx] > min_val:
+            min_val = data[shelter_idx]
+
+        # Ensure max_val is always greater than min_val
         if max_val <= min_val:
             if np.allclose(data, min_val):
+                # If all values are the same, return a flat map
                 return np.full_like(data, 128, dtype=np.uint8)
-            else:
-                max_val, min_val = (
-                    min_val,
-                    max_val,
-                )  # Swap if max is slightly lower due to noise
+
+            # Re-anchor min_val at the shelter
+            min_val = data[shelter_idx]
+            # Find a max_val that is guaranteed to be different,
+            # or handle the edge case where they are almost identical
+            max_val = np.max(data)
+            if max_val <= min_val:
+                # If shelter is somehow the highest point, find the real min
+                min_val = np.min(data)
+                max_val = data[shelter_idx]  # And shelter is the max
+
+        # --- END MODIFICATION ---
 
         scale = max_val - min_val
         if scale < 1e-9:

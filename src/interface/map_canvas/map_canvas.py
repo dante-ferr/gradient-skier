@@ -102,7 +102,7 @@ class MapCanvas(ctk.CTkCanvas):
         """
         x, y = event.x, event.y
 
-        if self._is_over_path(x, y, 5):  # 5 pixels tolerance
+        if self._is_over_path(x, y, 8):  # 5 pixels tolerance
             map_x, map_y = self.canvas_to_map_coords(x, y)
             gradient = self._get_gradient_info(map_x, map_y)
             self._display_gradient(gradient)
@@ -164,6 +164,7 @@ class MapCanvas(ctk.CTkCanvas):
         from core import map_manager
 
         if map_manager.map:
+            print(map_x, map_y)
             gradient = map_manager.map.get_gradient_at(map_x, map_y)
             return f"{gradient[0]:.2f}, {gradient[1]:.2f}"
         return "No map loaded"

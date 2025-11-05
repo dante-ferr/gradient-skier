@@ -4,7 +4,7 @@ from matplotlib import cm
 from terrain_map.generator import MapGenerator
 import numpy as np
 import plotly.graph_objects as go
-
+from config import config
 
 def _plot_map_2d_on_ax(ax, terrain_map):
     """
@@ -126,6 +126,36 @@ def plot_plotly_3d(terrain_map, z_scale=1.0):
     fig.show()
 
 
+def _plot_2d_views(terrain_map, attenuation_mask):
+    """
+    Generates and displays 2D Map and Attenuation Mask using Matplotlib.
+    """
+    MAP_WIDTH = config.MAP_WIDTH
+    MAP_HEIGHT = config.MAP_HEIGHT
+
+    fig = plt.figure(figsize=(20, 10))
+
+    # 2D Plot
+    ax1 = fig.add_subplot(1, 2, 1)
+    im1 = _plot_map_2d_on_ax(ax1, terrain_map)
+    fig.colorbar(
+        im1, ax=ax1, label="Altitude (0=low, 255=high)", fraction=0.046, pad=0.04
+    )
+
+    # Attenuation Mask Plot
+    ax2 = fig.add_subplot(1, 2, 2)
+    im2 = _plot_mask_2d_on_ax(ax2, attenuation_mask, terrain_map)
+    fig.colorbar(
+        im2, ax=ax2, label="Trap Strength (0=weak, 1=strong)", fraction=0.046, pad=0.04
+    )
+
+    fig.suptitle(
+        f"Gradient Skier - 2D Map & Corridor Mask ({MAP_WIDTH}x{MAP_HEIGHT})",
+        fontsize=16,
+    )
+    plt.tight_layout(rect=[0, 0.03, 1, 0.95])
+
+
 def plot_all_views(terrain_map, attenuation_mask, z_scale=1.0):
     """
     Generates and displays 2D Map and Attenuation Mask using Matplotlib,
@@ -133,31 +163,8 @@ def plot_all_views(terrain_map, attenuation_mask, z_scale=1.0):
     """
     plot_plotly_3d(terrain_map, z_scale=z_scale)
 
-    MAP_WIDTH = terrain_map.width
-    MAP_HEIGHT = terrain_map.height
-
-    # First, display the 2D Matplotlib plots
-    fig_2d_mask = plt.figure(figsize=(20, 10))
-
-    # 2D Plot
-    ax1 = fig_2d_mask.add_subplot(1, 2, 1)
-    im1 = _plot_map_2d_on_ax(ax1, terrain_map)
-    fig_2d_mask.colorbar(
-        im1, ax=ax1, label="Altitude (0=low, 255=high)", fraction=0.046, pad=0.04
-    )
-
-    # Attenuation Mask Plot
-    ax2 = fig_2d_mask.add_subplot(1, 2, 2)
-    im2 = _plot_mask_2d_on_ax(ax2, attenuation_mask, terrain_map)
-    fig_2d_mask.colorbar(
-        im2, ax=ax2, label="Trap Strength (0=weak, 1=strong)", fraction=0.046, pad=0.04
-    )
-
-    fig_2d_mask.suptitle(
-        f"Gradient Skier - 2D Map & Corridor Mask ({MAP_WIDTH}x{MAP_HEIGHT})",
-        fontsize=16,
-    )
-    plt.tight_layout(rect=[0, 0.03, 1, 0.95])
+    # Display the 2D Matplotlib plots
+    _plot_2d_views(terrain_map, attenuation_mask)
     plt.show()
 
 
@@ -175,8 +182,8 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
 
-    MAP_WIDTH = 75
-    MAP_HEIGHT = 75
+    MAP_WIDTH = config.MAP_WIDTH
+    MAP_HEIGHT = config.MAP_HEIGHT
     Z_SCALE = 0.5  # Increased default Z_SCALE for better 3D visualization
 
     print(f"--- Generating Test Map ({MAP_WIDTH}x{MAP_HEIGHT}) ---")
@@ -197,28 +204,7 @@ if __name__ == "__main__":
         plot_plotly_3d(terrain_map, z_scale=Z_SCALE)
     else:
         # Default action is to show the 2D map and the mask (Matplotlib)
-        fig = plt.figure(figsize=(20, 10))
-        ax1 = fig.add_subplot(1, 2, 1)
-        im1 = _plot_map_2d_on_ax(ax1, terrain_map)
-        fig.colorbar(
-            im1, ax=ax1, label="Altitude (0=low, 255=high)", fraction=0.046, pad=0.04
-        )
-
-        ax2 = fig.add_subplot(1, 2, 2)
-        im2 = _plot_mask_2d_on_ax(ax2, attenuation_mask, terrain_map)
-        fig.colorbar(
-            im2,
-            ax=ax2,
-            label="Trap Strength (0=weak, 1=strong)",
-            fraction=0.046,
-            pad=0.04,
-        )
-
-        fig.suptitle(
-            f"Gradient Skier - 2D Map & Corridor Mask ({MAP_WIDTH}x{MAP_HEIGHT})",
-            fontsize=16,
-        )
-        plt.tight_layout(rect=[0, 0.03, 1, 0.95])
+        _plot_2d_views(terrain_map, attenuation_mask)
         print("Displaying 2D plots with Matplotlib. Close the window to exit.")
         plt.show()
 
