@@ -7,9 +7,10 @@
   "game": {
     "use_default_map": false,
     "step_interval": 40,
+    "move_speed": 0.5,
     "stuck_area_steps": 10,
-    "stuck_area_radius": 2.0
+    "stuck_area_radius": 1.5
   },
-  "map_width": 65,
-  "map_height": 65
+  "map_width": 70,
+  "map_height": 70
 }

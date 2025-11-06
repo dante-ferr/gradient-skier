@@ -32,9 +32,7 @@ class CorridorGenerator:
         grad_x_val_minus = terrain_map[py, px_minus_1]
         grad_y_val_plus = terrain_map[py_plus_1, px]
         grad_y_val_minus = terrain_map[py_minus_1, px]
-        grad_x = (grad_x_val_plus - grad_x_val_minus) / (
-            dx if dx > 1e-6 else 1.0
-        )  # Avoid div by zero on edges
+        grad_x = (grad_x_val_plus - grad_x_val_minus) / (dx if dx > 1e-6 else 1.0)
         grad_y = (grad_y_val_plus - grad_y_val_minus) / (dy if dy > 1e-6 else 1.0)
         return np.array([grad_x, grad_y])
 
@@ -61,52 +59,37 @@ class CorridorGenerator:
         falloff_factor = np.clip(
             distance_to_target / self.config.CORRIDOR_LOCKON_RANGE, 0.0, 1.0
         )
-
-        # Wobble strength decreases as the walker gets closer to the target.
         wobble_strength = self.config.CORRIDOR_WOBBLE_STRENGTH * falloff_factor
-
-        # Magnet strength increases as the walker gets closer to the target.
         magnet_strength = self.config.CORRIDOR_MAGNET_STRENGTH + (
             self.config.CORRIDOR_LOCKON_STRENGTH * (1.0 - falloff_factor)
         )
-
         gravity_strength = self.config.CORRIDOR_GRAVITY_STRENGTH
-
         return wobble_strength, magnet_strength, gravity_strength
 
     def _calculate_forces(self, current_point, target_point, preliminary_map, px, py):
         """Calculates the gravity, magnet, and wobble force vectors."""
-        # 1. Gravity: Pulls the walker down the steepest slope of the base terrain.
         gravity_vec = self._normalize_vec(
             -self._get_gradient_at_point(preliminary_map, px, py)
         )
-
-        # 2. Magnet: Pulls the walker in a straight line towards the shelter.
         magnet_vec = self._normalize_vec(target_point - current_point)
-
-        # 3. Wobble: Adds lateral, organic movement to the path.
         wob_freq = self.config.CORRIDOR_WOBBLE_FREQUENCY
         noise_val = self.wobble_noise(
             [current_point[0] * wob_freq, current_point[1] * wob_freq]
         )
-        # The wobble direction is perpendicular to the magnet vector.
         wobble_direction = np.array([magnet_vec[1], -magnet_vec[0]])
         wobble_vec = wobble_direction * noise_val
-
         return gravity_vec, magnet_vec, wobble_vec
 
     def _update_walker_position(self, current_point, forces, weights):
         """Combines forces and moves the walker one step."""
         gravity_vec, magnet_vec, wobble_vec = forces
         wobble_strength, magnet_strength, gravity_strength = weights
-
         primary_direction = (gravity_vec * gravity_strength) + (
             magnet_vec * magnet_strength
         )
         combined_force = self._normalize_vec(
             self._normalize_vec(primary_direction) + (wobble_vec * wobble_strength)
         )
-
         move_direction = (
             combined_force if np.linalg.norm(combined_force) > 1e-9 else magnet_vec
         )
@@ -129,30 +112,20 @@ class CorridorGenerator:
                 break
 
             px, py = self._logical_to_pixel(current_point, width, height)
-
-            # Calculate dynamic weights for the forces
             weights = self._calculate_dynamic_weights(distance_to_target)
-
-            # Calculate the force vectors acting on the walker
             forces = self._calculate_forces(
                 current_point, target_point, preliminary_map, px, py
             )
-
-            # Update the walker's position based on the combined forces
             current_point = self._update_walker_position(current_point, forces, weights)
-
-            # Ensure the walker stays within the map's logical bounds
             current_point = np.clip(current_point, -5.0, 5.0)
             path_points.append(current_point.copy())
 
-        # Finalize the path
         if step == self.config.CORRIDOR_MAX_STEPS - 1:
             print(
                 f"Warning: Corridor generation reached max steps ({self.config.CORRIDOR_MAX_STEPS})."
             )
             if not np.allclose(path_points[-1], target_point):
                 path_points.append(target_point.copy())
-
         return path_points
 
     def _find_min_distance_to_polyline(self, xx, yy, polyline):
@@ -174,31 +147,38 @@ class CorridorGenerator:
             closest_points = p1 + t_clamped[:, np.newaxis] * seg_vec
             dists_sq = np.sum((points - closest_points) ** 2, axis=1)
             min_dists_sq = np.minimum(min_dists_sq, dists_sq)
-
         return np.sqrt(min_dists_sq).reshape(xx.shape)
 
     def _find_best_start_point(self, preliminary_map, width, height):
-        """Finds a suitable starting point for the corridor path."""
+        """
+        Finds a suitable starting point for the corridor path, prioritizing high-altitude
+        points on the map's border.
+        """
         threshold = (
             np.max(preliminary_map) * self.config.START_ALTITUDE_THRESHOLD_PERCENT
         )
-
-        # Find all pixels (y, x) that are above the altitude threshold
         candidate_pixels = np.argwhere(preliminary_map >= threshold)
 
-        if candidate_pixels.size > 0:
-            # Choose a random candidate pixel
+        border_candidates = [
+            (r, c)
+            for r, c in candidate_pixels
+            if r == 0 or r == height - 1 or c == 0 or c == width - 1
+        ]
+
+        if border_candidates:
+            py, px = random.choice(border_candidates)
+        elif candidate_pixels.size > 0:
+            # Fallback: If no border points are high enough, use any high point.
             py, px = random.choice(candidate_pixels)
         else:
-            # Fallback: if no points are above the threshold, use the highest point on the map
+            # Fallback: If no points meet threshold, use the highest point on the map.
             py, px = np.unravel_index(np.argmax(preliminary_map), preliminary_map.shape)
 
-        # Convert pixel coordinates to logical coordinates (-5.0 to 5.0)
         logical_x = (px / (width - 1)) * 10.0 - 5.0
         logical_y = (py / (height - 1)) * 10.0 - 5.0
         return logical_x, logical_y
 
-    def generate_attenuation_mask(
+    def generate_corridor_masks(
         self,
         width,
         height,
@@ -208,46 +188,68 @@ class CorridorGenerator:
         map_for_pathfinding,
         map_for_start_search,
     ):
+        """
+        Generates two masks based on the corridor path:
+        1. trap_attenuation_mask: (0.0 on flat bottom, 0-1 on walls, 1.0 outside)
+        2. ravine_carve_mask: (1.0 on ravine bottom, 1-0 on ravine walls, 0.0 on shelf/outside)
+        """
         start_point = self._find_best_start_point(map_for_start_search, width, height)
         polyline = self._generate_gradient_path(
             start_point, shelter_coords, map_for_pathfinding, width, height
         )
         distance_map = self._find_min_distance_to_polyline(xx, yy, polyline)
+
         t = distance_map / self.config.CORRIDOR_WIDTH
 
-        # Get "hole" shape parameters from config
-        sharpness = self.config.CORRIDOR_HOLE_SHARPNESS
-        flat_ratio = self.config.CORRIDOR_FLAT_BOTTOM_RATIO
-        sharpness = getattr(self.config, "CORRIDOR_WALL_SHARPNESS", 3.0)
-        flat_ratio = getattr(self.config, "CORRIDOR_FLAT_BOTTOM_RATIO", 0.4)
+        # --- 1. Calculate Trap Attenuation Mask (Wide) ---
 
-        # Ensure flat_ratio is sane (0.0 to < 1.0)
-        flat_ratio = np.clip(flat_ratio, 0.0, 0.999)
-        denominator = 1.0 - flat_ratio
-
-        # 1. Create the flat bottom
-        # We remap t:
-        # - All values of t below flat_ratio will become 0.
-        # - Values from flat_ratio to 1.0 will be re-scaled to [0.0, 1.0]
-        # Example: if flat_ratio=0.4 and t=0.7:
-        #          (0.7 - 0.4) / (1.0 - 0.4) = 0.3 / 0.6 = 0.5
-        t_remapped = np.clip(t - flat_ratio, 0.0, None) / denominator
-
-        # 2. Create the steep walls
-        # We use an "ease-out" power function (1 - (1-x)^p)
-        # This rises very quickly from 0 and plateaus as it approaches 1.
-        # When t_remapped=0.0 (on the flat bottom), strength_factor=0.0
-        # When t_remapped=0.5 (halfway up the wall), strength_factor=0.875 (if sharpness=3)
-        # When t_remapped=1.0 (at the top edge), strength_factor=1.0
-        strength_factor = 1.0 - (1.0 - t_remapped) ** sharpness
-
-        # 3. Interpolate
-        # strength_factor=0.0 -> mask = MIN_STRENGTH (the flat bottom)
-        # strength_factor=1.0 -> mask = 1.0 (the surface)
-        mask = (
-            self.config.CORRIDOR_MIN_STRENGTH
-            + (1.0 - self.config.CORRIDOR_MIN_STRENGTH) * strength_factor
+        trap_sharpness = getattr(self.config, "CORRIDOR_WALL_SHARPNESS", 3.0)
+        trap_flat_t = np.clip(
+            getattr(self.config, "CORRIDOR_FLAT_BOTTOM_RATIO", 0.4), 0.0, 0.999
         )
 
-        np.clip(mask, self.config.CORRIDOR_MIN_STRENGTH, 1.0, out=mask)
-        return mask
+        denominator_trap = 1.0 - trap_flat_t
+
+        # --- FIX IS HERE ---
+        # We must clip the remapped 't' to be between 0.0 and 1.0
+        # to avoid taking a fractional power of a negative number.
+        numerator_trap = np.clip(t - trap_flat_t, 0.0, denominator_trap)
+        t_remapped_trap = numerator_trap / (
+            denominator_trap if denominator_trap > 1e-9 else 1.0
+        )
+        # --- END FIX ---
+
+        strength_factor_trap = 1.0 - (1.0 - t_remapped_trap) ** trap_sharpness
+        trap_attenuation_mask = np.clip(strength_factor_trap, 0.0, 1.0)
+
+        # --- 2. Calculate Ravine Carve Mask (Narrow) ---
+
+        ravine_sharpness = getattr(
+            self.config, "CORRIDOR_RAVINE_WALL_SHARPNESS", trap_sharpness
+        )
+        ravine_shelf_ratio = np.clip(
+            getattr(self.config, "CORRIDOR_RAVINE_SHELF_RATIO", 0.6), 0.0, 1.0
+        )
+
+        ravine_flat_t = trap_flat_t * ravine_shelf_ratio
+
+        denominator_ravine = trap_flat_t - ravine_flat_t
+
+        # --- FIX IS HERE ---
+        # Same fix as above, for the ravine wall.
+        numerator_ravine = np.clip(t - ravine_flat_t, 0.0, denominator_ravine)
+        t_remapped_ravine = numerator_ravine / (
+            denominator_ravine if denominator_ravine > 1e-9 else 1.0
+        )
+        # --- END FIX ---
+
+        strength_factor_ravine = 1.0 - (1.0 - t_remapped_ravine) ** ravine_sharpness
+        strength_factor_ravine = np.clip(strength_factor_ravine, 0.0, 1.0)
+
+        # Force values outside the safe platform to be 1.0 (no carving)
+        strength_factor_ravine = np.where(t >= trap_flat_t, 1.0, strength_factor_ravine)
+
+        # Invert to create the carve mask
+        ravine_carve_mask = 1.0 - strength_factor_ravine
+
+        return trap_attenuation_mask, ravine_carve_mask

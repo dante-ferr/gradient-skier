@@ -87,14 +87,15 @@ class Match:
                     self.skier_position
                 )
                 distance = np.linalg.norm(direction_vector)
-                if distance > 1:
+                print(distance)
+                if distance > 2:
                     move_vector = direction_vector / distance
                 else:
                     move_vector = np.array([0.0, 0.0])  # Very close, no need to move
 
         new_position = (
-            self.skier_position[0] + move_vector[0],
-            self.skier_position[1] + move_vector[1],
+            self.skier_position[0] + move_vector[0] * config.game.MOVE_SPEED,
+            self.skier_position[1] + move_vector[1] * config.game.MOVE_SPEED,
         )
 
         # Clamp the new position to stay within the map boundaries

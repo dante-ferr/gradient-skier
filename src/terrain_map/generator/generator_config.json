@@ -1,41 +1,44 @@
 {
-  "shelter_depth": 50.0,
-  "shelter_width": 4.0,
-  "shelter_min_edge_distance": 5.0,
+  "shelter_depth": 10.0,
+  "shelter_width": 9.5,
+  "shelter_flat_bottom_ratio": 0.1,
+  "shelter_wall_sharpness": 1.2,
+  "shelter_min_edge_distance": 4.0,
 
-  "trap_density": 0.01,
-  "trap_absolute_depth_min": 2.5,
-  "trap_absolute_depth_max": 10.5,
+  "trap_density": 0.0125,
+  "trap_absolute_depth_min": 0.2,
+  "trap_absolute_depth_max": 1.75,
   "trap_width_min": 0.3,
   "trap_width_max": 0.75,
 
   "basin_warp_octaves": 3,
   "basin_warp_frequency": 0.1,
-  "basin_warp_amplitude": 2.2,
+  "basin_warp_amplitude": 2.4,
 
-  "detail_noise_octaves": 1,
+  "detail_noise_octaves": 3,
   "detail_noise_frequency": 0.0,
-  "detail_noise_amplitude": 0.0,
+  "detail_noise_amplitude": 0.7,
 
   "corridor_gravity_strength": 1.0,
   "corridor_magnet_strength": 0.05,
-  "corridor_wobble_strength": 6.0,
+  "corridor_wobble_strength": 8.0,
   "corridor_wobble_frequency": 0.3,
   "corridor_wobble_octaves": 3,
   "corridor_step_size": 0.1,
   "corridor_max_steps": 10000,
-  "corridor_width": 1.9,
-  "corridor_min_strength": 0.1,
-  "corridor_hole_sharpness": 2.0,
-  "corridor_flat_bottom_ratio": 0.15,
+  "corridor_width": 1.4,
 
-  "corridor_ravine_depth": 2.0,
+  "corridor_wall_sharpness": 1.5,
+  "corridor_flat_bottom_ratio": 0.45,
+  "corridor_ravine_depth": 0.3,
+
+  "corridor_ravine_shelf_ratio": 0.35,
+  "corridor_ravine_wall_sharpness": 0.9,
 
   "corridor_lockon_range": 2.5,
   "corridor_lockon_strength": 3.0,
 
   "corridor_start_candidates": 20,
-  "start_altitude_threshold_percent": 0.95,
-
+  "start_altitude_threshold_percent": 0.9,
   "shelter_border_min_distance": 2
 }

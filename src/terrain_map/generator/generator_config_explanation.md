@@ -15,8 +15,16 @@ These parameters control the main "sink" of the map, which defines the overall s
 ### `SHELTER_WIDTH`
 * **What it does:** The width of the main basin. It controls how gentle the slope is.
 * **Tuning:**
-    * **High value (e.g., `9.0`):** Creates a very wide and gentle "sink," covering almost the entire map.
-    * **Low value (e.g., `3.0`):** Creates a more localized and steep hole.
+    * **High value:** Creates a very wide and gentle "sink," covering almost the entire map.
+    * **Low value:** Creates a more localized and steep hole.
+
+### `SHELTER_BORDER_MIN_DISTANCE`
+* **What it does:** The minimum distance (in pixels) that the shelter is allowed to spawn from the X and Y edges of the map.
+* **Tuning:** Increase this to force the shelter further away from the map border.
+
+### `SHELTER_MIN_EDGE_DISTANCE`
+* **What it does:** A logical value to ensure the shelter doesn't spawn too close to the center. The sum of the absolute logical X and Y values (`abs(x) + abs(y)`) must be greater than this.
+* **Tuning:** A larger value forces the shelter into the "corners" of the map. A low value allows it to spawn anywhere (except the exact center).
 
 ---
 
@@ -70,7 +78,7 @@ Controls the fine texture and roughness of the entire terrain.
 
 ### `DETAIL_NOISE_OCTAVES`
 * **What it does:** The level of detail of the noise.
-* **Tuning:** Higher values (e.g., `8`) create a richer, more realistic texture.
+* **Tuning:** Higher values create a richer, more realistic texture.
 
 ### `DETAIL_NOISE_FREQUENCY`
 * **What it does:** The "scale" of the noise.
@@ -85,11 +93,15 @@ Controls the fine texture and roughness of the entire terrain.
 
 ## 5. Safe Corridor Parameters
 
-Control the generation of the winding path that guarantees the map is solvable. This is managed by three competing forces on a simulated "walker".
+Control the generation of the winding path that guarantees the map is solvable. This is a complex "trench" structure with three levels: an inner ravine, a safe shelf, and outer walls.
+
+### 5.1. Path Simulation (The "Walker")
+
+These parameters control the forces that guide a simulated "walker" to define the *centerline* of the corridor.
 
 ### `CORRIDOR_GRAVITY_STRENGTH`
-* **What it does:** The strength of the "gravity" force, which pulls the walker down the steepest local slope (the gradient of the "pia"). This makes the path follow the terrain's contours.
-* **Tuning:** A higher value makes the path more "natural" and terrain-aware. `1.0` is a good baseline.
+* **What it does:** The strength of the "gravity" force, which pulls the walker down the steepest local slope (the gradient of the main basin). This makes the path follow the terrain's contours.
+* **Tuning:** A higher value makes the path more "natural" and terrain-aware.
 
 ### `CORRIDOR_MAGNET_STRENGTH`
 * **What it does:** The base strength of the "magnet" force, which pulls the walker in a straight line toward the shelter. This guarantees progress.
@@ -106,8 +118,8 @@ Control the generation of the winding path that guarantees the map is solvable. 
 ### `CORRIDOR_WOBBLE_FREQUENCY`
 * **What it does:** The frequency of the "wind's" curves.
 * **Tuning:**
-    * **Low value (e.g., `0.3`):** Long, smooth curves.
-    * **High value (e.g., `1.5`):** Fast, short zig-zags.
+    * **Low value:** Long, smooth curves.
+    * **High value:** Fast, short zig-zags.
 
 ### `CORRIDOR_WOBBLE_OCTAVES`
 * **What it does:** The level of detail of the "wind," making the deviation more organic. Lower values produce smoother curves.
@@ -125,15 +137,47 @@ Control the generation of the winding path that guarantees the map is solvable. 
 ### `CORRIDOR_MAX_STEPS`
 * **What it does:** A safety limit to prevent infinite loops in the simulation.
 
-### `CORRIDOR_WIDTH`
-* **What it does:** The width of the safe path in logical units. Traps within this radius will be weakened.
+---
 
-### `CORRIDOR_MIN_STRENGTH`
-* **What it does:** The strength multiplier for a trap located in the center of the corridor. `0.1` means the trap will have 10% of its original depth.
+### 5.2. Corridor Structure (The "Shape")
+
+These parameters use the walker's path as a centerline to build the physical "trench" into the terrain.
+
+### `CORRIDOR_WIDTH`
+* **What it does:** The *total* width of the entire corridor structure, from one outer edge to the other, in logical units.
+* **Tuning:** Defines the overall size of the safe/attenuated zone.
+
+### `CORRIDOR_FLAT_BOTTOM_RATIO`
+* **What it does:** Defines the width of the **safe platform** (the inner area that is completely flat and has 0% trap strength) as a ratio of the total `CORRIDOR_WIDTH`.
+* **Tuning:** A ratio of `1.0` removes the outer walls, making the entire corridor a flat, trap-free zone (not recommended if you want a smooth transition). A lower ratio creates a narrower platform and wider, sloping walls.
+
+### `CORRIDOR_WALL_SHARPNESS`
+* **What it does:** Controls the steepness of the **outer walls** (the transition from the trap-free platform to the main, trap-filled terrain).
+* **Tuning:**
+    * **High value:** A steep, cliff-like edge.
+    * **Low value:** A gentle, sloping transition.
+
+### `CORRIDOR_RAVINE_DEPTH`
+* **What it does:** The maximum depth of the **inner ravine** that is carved *inside* the safe platform, in logical units.
+* **Tuning:** Increase to create a deeper, more obvious guiding channel. Set to `0.0` to disable the ravine, leaving only the flat, safe platform.
+
+### `CORRIDOR_RAVINE_SHELF_RATIO`
+* **What it does:** Defines the width of the inner ravine as a ratio of the `CORRIDOR_FLAT_BOTTOM_RATIO`. This creates the "safe shelf" between the ravine wall and the outer wall.
+* **Tuning:**
+    * **Ratio of `1.0`:** The ravine takes up the *entire* flat bottom (no shelf).
+    * **Lower ratios:** The ravine takes up a percentage of the flat bottom, leaving shelf space on each side.
+    * **Ratio of `0.0`:** The ravine has zero width (disables it).
+
+### `CORRIDOR_RAVINE_WALL_SHARPNESS`
+* **What it does:** Controls the steepness of the **inner ravine walls** (the transition from the safe shelf down into the ravine).
+* **Tuning:**
+    * **High value:** Creates a deep "U" or "V" shaped channel.
+    * **Low value:** Creates a very gentle, "spoon-like" depression.
 
 ---
 
 ## 6. General Game Parameters
 
 ### `START_ALTITUDE_THRESHOLD_PERCENT`
-* **What it does:** Defines the minimum relative altitude for a point to be a valid starting location for both the **player** and the **safe corridor**. A value of `0.85` means the point must have an altitude of at least 85% of the map's maximum altitude. This ensures starts are always at the "top of the mountain."
+* **What it does:** Defines the minimum relative altitude for a point to be a valid starting location for both the **player** and the **safe corridor**. A value of `0.0` to `1.0` (representing 0% to 100%) of the map's maximum altitude.
+* **Tuning:** A high value ensures starts are always at the "top of the mountain." A low value allows for starts closer to the middle.

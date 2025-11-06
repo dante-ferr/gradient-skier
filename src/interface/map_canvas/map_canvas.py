@@ -164,7 +164,6 @@ class MapCanvas(ctk.CTkCanvas):
         from core import map_manager
 
         if map_manager.map:
-            print(map_x, map_y)
             gradient = map_manager.map.get_gradient_at(map_x, map_y)
             return f"{gradient[0]:.2f}, {gradient[1]:.2f}"
         return "No map loaded"
