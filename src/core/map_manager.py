@@ -6,6 +6,7 @@ from config import config
 from multiprocessing import Process, Queue
 from typing import TYPE_CHECKING, cast
 import customtkinter as ctk
+import matplotlib.pyplot as plt
 
 if TYPE_CHECKING:
     from terrain_map.generator.map_generator import MapGenerator
@@ -55,11 +56,17 @@ class MapManager:
 
     def _on_map_generated(self, terrain_map: TerrainMap):
         from state_managers import canvas_state_manager
+        from test_and_plot_map import _plot_2d_views
 
         self.map = terrain_map
 
         for callback in self._on_map_recreate_callbacks:
             callback()
+
+        if map_manager.map is None:
+            raise Exception("No map loaded")
+        _plot_2d_views(map_manager.map, map_manager.map.attenuation_mask)
+        plt.show(block=False)
 
         loading_var = cast(ctk.BooleanVar, canvas_state_manager.vars["loading"])
         loading_var.set(False)

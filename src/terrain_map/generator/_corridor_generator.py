@@ -154,24 +154,22 @@ class CorridorGenerator:
         Finds a suitable starting point for the corridor path, prioritizing high-altitude
         points on the map's border.
         """
-        threshold = (
+        lower_threshold = (
             np.max(preliminary_map) * self.config.START_ALTITUDE_THRESHOLD_PERCENT
         )
-        candidate_pixels = np.argwhere(preliminary_map >= threshold)
+        upper_threshold = (
+            np.max(preliminary_map) * self.config.CORRIDOR_MAX_START_THRESHOLD
+        )
 
-        border_candidates = [
-            (r, c)
-            for r, c in candidate_pixels
-            if r == 0 or r == height - 1 or c == 0 or c == width - 1
-        ]
+        candidate_pixels = np.argwhere(
+            (
+                preliminary_map >= lower_threshold
+            )  # & (preliminary_map <= upper_threshold)
+        )
 
-        if border_candidates:
-            py, px = random.choice(border_candidates)
-        elif candidate_pixels.size > 0:
-            # Fallback: If no border points are high enough, use any high point.
+        if candidate_pixels.size > 0:
             py, px = random.choice(candidate_pixels)
         else:
-            # Fallback: If no points meet threshold, use the highest point on the map.
             py, px = np.unravel_index(np.argmax(preliminary_map), preliminary_map.shape)
 
         logical_x = (px / (width - 1)) * 10.0 - 5.0

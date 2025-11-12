@@ -38,14 +38,15 @@ class TerrainMap:
             np.float32
         )
 
-        # self.gradient_y corresponds to df/dy (changes along axis 0)
         self.gradient_y: np.ndarray = sobel(map_float, axis=0)
-        # self.gradient_x corresponds to df/dx (changes along axis 1)
         self.gradient_x: np.ndarray = sobel(map_float, axis=1)
 
-        # Pre-calculate all contiguous global minima coordinates
         self._global_minima_coords: Set[Tuple[int, int]] = (
             self._find_all_global_minima()
+        )
+
+        self.attenuation_mask: np.ndarray[Any, np.dtype[np.float32]] = np.zeros(
+            (self.height, self.width), dtype=np.float32
         )
 
     def get_gradient_at(self, x: int, y: int) -> np.ndarray:
@@ -122,11 +123,9 @@ class TerrainMap:
         shelter_x, shelter_y = self.shelter_coords
         min_height = self.get_height_at(shelter_x, shelter_y)
 
-        # Start BFS from the shelter
         q.append((shelter_x, shelter_y))
         global_minima_set.add((shelter_x, shelter_y))
 
-        # Define possible neighbor movements (4-directional: right, left, down, up)
         neighbors = [(1, 0), (-1, 0), (0, 1), (0, -1)]
 
         while q:
@@ -135,11 +134,9 @@ class TerrainMap:
             for dx, dy in neighbors:
                 nx, ny = cx + dx, cy + dy
 
-                # Check bounds
                 if not (0 <= nx < self.width and 0 <= ny < self.height):
                     continue
 
-                # Check if neighbor has the same minimum height and hasn't been visited
                 if (nx, ny) not in global_minima_set and self.get_height_at(
                     nx, ny
                 ) == min_height:
@@ -170,7 +167,6 @@ class TerrainMap:
         Returns:
             PIL.Image: A grayscale ('L') image.
         """
-        # The data is already uint8 (0-255), so this is a simple conversion.
         return Image.fromarray(self.height_data, "L")
 
     def save_to_json(self, filename: str):
@@ -187,7 +183,6 @@ class TerrainMap:
             ),
             "start_altitude_threshold": int(self.start_altitude_threshold),
         }
-        # Ensure the directory exists before saving
         os.makedirs(os.path.dirname(filename), exist_ok=True)
         with open(filename, "w") as f:
             json.dump(map_data, f, indent=4)

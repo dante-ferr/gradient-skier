@@ -19,7 +19,11 @@ class Match:
     def step(self):
         sx_int, sy_int = int(self.skier_position[0]), int(self.skier_position[1])
 
-        if self.skier_position == self.terrain_map.get_shelter_coords():
+        if (
+            abs(self.skier_position[0] - self.terrain_map.get_shelter_coords()[0]) < 0.1
+            and abs(self.skier_position[1] - self.terrain_map.get_shelter_coords()[1])
+            < 0.1
+        ):
             self.status = "won"
             return True
 
@@ -56,42 +60,36 @@ class Match:
 
         return False
 
+    def _get_shelter_move_vector(self, min_dist: float = 1.0) -> np.ndarray:
+        """
+        Calculates a normalized move vector pointing directly to the shelter.
+        Returns a zero vector if the skier is closer than `min_dist`.
+        """
+        shelter_coords = self.terrain_map.get_shelter_coords()
+        direction_vector = np.array(shelter_coords) - np.array(self.skier_position)
+        distance = np.linalg.norm(direction_vector)
+
+        if distance > min_dist:
+            return direction_vector / distance  # Normalized vector
+        elif distance > 1e-9:
+            return direction_vector  # Very close, move the remaining distance
+        return np.array([0.0, 0.0])  # At the destination
+
     def _move_skier(self):
         sx, sy = self.skier_position
 
         if self.terrain_map.is_global_minimum(int(sx), int(sy)):
             # If in the global minimum basin, move directly towards the shelter
-            shelter_coords = self.terrain_map.get_shelter_coords()
-
-            # Vector from player to shelter
-            direction_vector = np.array(shelter_coords) - np.array(self.skier_position)
-
-            # Normalize the vector to get a unit vector (length 1)
-            distance = np.linalg.norm(direction_vector)
-            if distance > 1:  # Move only if not already at the shelter
-                move_vector = direction_vector / distance
-            else:
-                move_vector = direction_vector  # Arrived
+            move_vector = self._get_shelter_move_vector()
         else:
             # Otherwise, follow the gradient
             gradient = self.terrain_map.get_gradient_at(int(sx), int(sy))
-            # We need to normalize the gradient to control speed, let's assume a step size of 1 for now
             norm = np.linalg.norm(gradient)
             if norm > 0:
                 move_vector = -gradient / norm  # Move against the gradient (downhill)
             else:
-                # Stuck in a local minimum or plateau (zero gradient).
-                # Move towards the shelter as a fallback.
-                shelter_coords = self.terrain_map.get_shelter_coords()
-                direction_vector = np.array(shelter_coords) - np.array(
-                    self.skier_position
-                )
-                distance = np.linalg.norm(direction_vector)
-                print(distance)
-                if distance > 2:
-                    move_vector = direction_vector / distance
-                else:
-                    move_vector = np.array([0.0, 0.0])  # Very close, no need to move
+                # Stuck in a local minimum (zero gradient), move towards shelter as a fallback.
+                move_vector = self._get_shelter_move_vector(min_dist=2.0)
 
         new_position = (
             self.skier_position[0] + move_vector[0] * config.game.MOVE_SPEED,

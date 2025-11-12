@@ -3,7 +3,6 @@ from terrain_map.generator import MapGenerator
 from config import config
 
 if __name__ == "__main__":
-    # Define the default save path relative to the project root
     default_save_path = config.TERRAIN_SAVES_PATH / "terrain_map.json"
 
     parser = argparse.ArgumentParser(
@@ -28,8 +27,6 @@ if __name__ == "__main__":
         f"Map generated. Shelter location: (x={terrain_map.get_shelter_coords()[0]}, y={terrain_map.get_shelter_coords()[1]})"
     )
 
-    terrain_map.save_to_json(
-        args.filename
-    )  # Now calls the method on the TerrainMap object
+    terrain_map.save_to_json(args.filename)
 
     print("\nScript finished.")

@@ -25,18 +25,14 @@ class CanvasMapRenderer:
         if not terrain_map:
             return
 
-        # Normalize height data (0-1) and apply a colormap (e.g., terrain)
         height_data = terrain_map.height_data
         colored_data = cm.terrain(height_data / 255.0)  # type: ignore
 
-        # Convert to an 8-bit RGBA image that PIL/Tkinter can use
         image_data = (colored_data * 255).astype(np.uint8)
         pil_image = Image.fromarray(image_data, "RGBA")
 
-        # Store the original image for later rescaling
         self.original_pil_images["terrain_map"] = pil_image
 
-        # Create the initial PhotoImage at 1x zoom
         photo_image = ImageTk.PhotoImage(pil_image)
         self.image_cache[("terrain_map", 1)] = photo_image
         self.current_photo_images["terrain_map"] = photo_image
@@ -56,23 +52,19 @@ class CanvasMapRenderer:
         else:
             original_pil_image = self.original_pil_images.get(tag)
             if not original_pil_image:
-                return  # No original image to scale
+                return
 
             new_width = original_pil_image.width * zoom
             new_height = original_pil_image.height * zoom
 
-            # Use NEAREST for sharp pixels, which is good for this type of map
             scaled_pil_image = original_pil_image.resize(
                 (new_width, new_height), Image.NEAREST  # type: ignore
             )
             new_photo_image = ImageTk.PhotoImage(scaled_pil_image)
             self.image_cache[cache_key] = new_photo_image
 
-        # Reposition the image to keep the origin point stationary
         old_coords = self.canvas.coords(tag)
         old_x, old_y = old_coords if old_coords else (0, 0)
         self.canvas.coords(tag, old_x, old_y)
-
         self.canvas.itemconfig(tag, image=new_photo_image)
-        # Keep a reference to the new image to prevent garbage collection
         self.current_photo_images[tag] = new_photo_image
