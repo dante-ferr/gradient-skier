@@ -27,6 +27,7 @@ class CanvasPinsRenderer:
         if pin_id in self.pins:
             # Pin exists, just move it
             self.canvas.coords(pin_id, canvas_x, canvas_y)
+            self.canvas.lift(pin_id)  # Ensure it's on top
             self.pins[pin_id]["map_pos"] = position
         else:
             # Pin doesn't exist, create it
@@ -44,12 +45,14 @@ class CanvasPinsRenderer:
                 "canvas_item_id": canvas_item_id,
                 "map_pos": position,
             }
+            self.canvas.lift(pin_id)  # Ensure it's on top
 
     def rescale(self):
         for pin_id, pin_info in self.pins.items():
             canvas_x, canvas_y = self._get_canvas_pos(pin_info["map_pos"])
 
             self.canvas.coords(pin_id, canvas_x, canvas_y)
+            self.canvas.lift(pin_id)  # Ensure it's on top
 
     def _get_canvas_pos(self, map_pos: tuple[float, float]):
         zoom = self.canvas.zoom_level

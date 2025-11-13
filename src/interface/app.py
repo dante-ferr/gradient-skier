@@ -6,13 +6,13 @@ from .map_canvas import MapCanvas
 ctk.set_appearance_mode("Dark")
 ctk.set_default_color_theme(str(theme.path))
 
-class App(ctk.CTk):
 
+class App(ctk.CTk):
     def __init__(self):
+        super().__init__()
+
         from game import game_manager
         from core import map_manager
-
-        super().__init__()
 
         self.title("Gradient Skier")
         self.attributes("-zoomed", True)
@@ -44,7 +44,7 @@ class App(ctk.CTk):
         sidebar = Sidebar(self)
         sidebar.grid(row=0, column=1, sticky="nsew", padx=0, pady=0)
 
-        map_manager.load_map_from_json()
+        # map_manager.load_map_from_json()
 
         self.canvas: MapCanvas | None = None
 

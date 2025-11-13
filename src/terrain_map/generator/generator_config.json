@@ -1,47 +1,24 @@
 {
-  "shelter_depth": 10.0,
-  "shelter_width": 7.0,
-  "shelter_flat_bottom_ratio": 0.05,
-  "shelter_wall_sharpness": 2.5,
-  "shelter_border_min_distance": 3.0,
-
-  "trap_density": 0.0095,
-  "trap_absolute_depth_min": 0.2,
-  "trap_absolute_depth_max": 1.75,
-  "trap_width_min": 0.35,
-  "trap_width_max": 0.95,
-
-  "basin_warp_octaves": 3,
-  "basin_warp_frequency": 0.1,
-  "basin_warp_amplitude": 1.85,
-
-  "detail_noise_octaves": 3,
-  "detail_noise_frequency": 0.0,
-  "detail_noise_amplitude": 0.7,
-
-  "corridor_gravity_strength": 1.0,
-  "corridor_magnet_strength": 0.05,
-  "corridor_wobble_strength": 8.0,
-  "corridor_wobble_frequency": 0.3,
-  "corridor_wobble_octaves": 3,
-  "corridor_step_size": 0.1,
-  "corridor_max_steps": 10000,
-  "corridor_width": 1.6,
-
-  "corridor_max_start_threshold": 1.0,
-
-  "corridor_wall_sharpness": 2.1,
-  "corridor_flat_bottom_ratio": 0.3,
-  "corridor_ravine_depth": 0.25,
-
-  "corridor_ravine_max_height_ratio": 0.92,
-  "corridor_ravine_feather_height": 1.0,
-  "corridor_ravine_shelf_ratio": 0.265,
-  "corridor_ravine_wall_sharpness": 0.9,
-
-  "corridor_lockon_range": 2.5,
-  "corridor_lockon_strength": 3.0,
-
-  "corridor_start_candidates": 20,
-  "start_altitude_threshold_percent": 0.9
+  "wide_variation_octaves": 6,
+  "wide_variation_frequency": 0.02,
+  "wide_variation_amplitude": 20.0,
+  "trap_density": 0.0035,
+  "trap_absolute_depth_min": 12.0,
+  "trap_absolute_depth_max": 20.0,
+  "trap_width_min": 0.3,
+  "trap_width_max": 0.8,
+  "ridge_density": 0.0035,
+  "ridge_absolute_height_min": 15.0,
+  "ridge_absolute_height_max": 25.0,
+  "ridge_width_min": 0.3,
+  "ridge_width_max": 0.8,
+  "ridge_octaves": 6,
+  "ridge_frequency": 1.5,
+  "ridge_amplitude": 1.2,
+  "basin_warp_octaves": 4,
+  "basin_warp_frequency": 0.15,
+  "basin_warp_amplitude": 4.5,
+  "detail_noise_octaves": 6,
+  "detail_noise_frequency": 6.0,
+  "detail_noise_amplitude": 1.2
 }

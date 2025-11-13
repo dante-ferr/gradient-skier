@@ -11,6 +11,17 @@
     "stuck_area_steps": 10,
     "stuck_area_radius": 1.5
   },
-  "map_width": 85,
-  "map_height": 85
+  "map_width": 120,
+  "map_height": 120,
+  "tool": {
+    "tool_radius": 5,
+    "excavator_depth": 10.0,
+    "filler_height": 10.0,
+    "grader_intensity": 0.5,
+    "max_tool_charges": 5
+  },
+  "pathfinding": {
+    "flat_move_cost": 1.0,
+    "climb_cost_multiplier": 5.0
+  }
 }

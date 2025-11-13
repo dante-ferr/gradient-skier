@@ -15,9 +15,7 @@ if TYPE_CHECKING:
 def generate_map_worker(queue: Queue):
     """Worker function to run in a separate process."""
     generator = MapGenerator()
-    terrain_map, _ = generator.generate(
-        width=config.MAP_WIDTH, height=config.MAP_HEIGHT
-    )
+    terrain_map = generator.generate(width=config.MAP_WIDTH, height=config.MAP_HEIGHT)
     queue.put(terrain_map)
 
 
@@ -56,7 +54,7 @@ class MapManager:
 
     def _on_map_generated(self, terrain_map: TerrainMap):
         from state_managers import canvas_state_manager
-        from test_and_plot_map import _plot_2d_views
+        from game import game_manager
 
         self.map = terrain_map
 
@@ -65,11 +63,11 @@ class MapManager:
 
         if map_manager.map is None:
             raise Exception("No map loaded")
-        _plot_2d_views(map_manager.map, map_manager.map.attenuation_mask)
-        plt.show(block=False)
 
         loading_var = cast(ctk.BooleanVar, canvas_state_manager.vars["loading"])
         loading_var.set(False)
+
+        game_manager.calculate_initial_path()
 
     def _check_for_map_result(self):
         """Polls the queue for a generated map."""
@@ -89,10 +87,8 @@ class MapManager:
                 map_data = json.load(f)
 
             height_data = np.array(map_data["height_data"], dtype=np.uint8)
-            shelter_coords = tuple(map_data["shelter_coords"])
-            start_altitude_threshold = map_data["start_altitude_threshold"]
 
-            self.map = TerrainMap(height_data, shelter_coords, start_altitude_threshold)
+            self.map = TerrainMap(height_data)
 
             print(f"Successfully loaded map from {filepath}")
 

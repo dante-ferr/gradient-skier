@@ -1,12 +1,12 @@
-from typing import TYPE_CHECKING
-
+from typing import TYPE_CHECKING, cast
+import customtkinter as ctk
 
 if TYPE_CHECKING:
     from .map_canvas import MapCanvas
 
 
 class CanvasClickHandler:
-    """Handles click events on the map canvas to start a match."""
+    """Handles click events on the map canvas to apply terraforming tools."""
 
     def __init__(self, canvas: "MapCanvas"):
         self.canvas = canvas
@@ -16,26 +16,37 @@ class CanvasClickHandler:
         """
         Callback for the left-click event on the canvas.
 
-        If a match is not currently running, this method converts the click's
-        screen coordinates to map coordinates and starts a new match from that point,
-        provided it's a valid starting location.
+        Applies the currently selected tool to the map, provided the player
+        has charges left and interaction is allowed.
         """
         from game import game_manager
-        from core import map_manager
+        from state_managers import game_state_manager
 
-        # Do nothing if a match is already in progress
-        if game_manager.match:
-            print("Cannot start a new match while one is in progress.")
+        # Check if interaction is currently disabled (e.g., during path calculation)
+        player_can_interact_var = cast(
+            ctk.BooleanVar, game_state_manager.vars["player_can_interact"]
+        )
+        if not player_can_interact_var.get():
+            print("Interaction temporarily disabled (calculating path).")
             return
 
-        # Convert screen coordinates (event.x, event.y) to map grid coordinates
+        # Check if the player has any tool charges left
+        tool_charges_var = cast(
+            ctk.IntVar, game_state_manager.vars["tool_charges_remaining"]
+        )
+        if tool_charges_var.get() <= 0:
+            print("No tool charges remaining. Reset the map to play again.")
+            return
+
+        # 1. Get the currently selected tool from the game state manager
+        selected_tool_var = cast(
+            ctk.StringVar, game_state_manager.vars["selected_tool"]
+        )
+        tool_type = selected_tool_var.get()
+
+        # 2. Convert screen coordinates (event.x, event.y) to map grid coordinates
         map_x, map_y = self.canvas.canvas_to_map_coords(event.x, event.y)
 
-        # Check if the selected point is a valid start point on the current map
-        if map_manager.map and map_manager.map.is_valid_start_point(map_x, map_y):
-            print(f"Valid start point clicked. Starting match at ({map_x}, {map_y}).")
-            game_manager.run_match_simulation((map_x, map_y))
-        else:
-            print(
-                f"Invalid start point at ({map_x}, {map_y}). Please click on a higher altitude area."
-            )
+        # 3. Apply the tool via the GameManager
+        print(f"Applying tool '{tool_type}' at map coords ({map_x}, {map_y}).")
+        game_manager.use_tool_at(tool_type, map_x, map_y)

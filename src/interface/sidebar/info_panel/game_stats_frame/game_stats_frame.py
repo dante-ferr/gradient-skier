@@ -11,36 +11,44 @@ class GameStatsFrame(ctk.CTkFrame):
         super().__init__(parent, fg_color="transparent", width=300)
         self.pack_propagate(False)
 
-        attempts_display_label = ctk.CTkLabel(
-            self, text="Attempts: ", **self.LABEL_INIT_PARAMS
+        # --- 1. Tool Charges Display ---
+        charges_display_label = ctk.CTkLabel(
+            self, text="Charges Left: ", **self.LABEL_INIT_PARAMS
         )
-        attempts_display_label.pack(**self.LABEL_PACK_PARAMS)
+        charges_display_label.pack(**self.LABEL_PACK_PARAMS)
 
-        def _update_attempts_display(value: float):
-            attempts_display_label.configure(text=f"Attempts: {int(value)}")
+        def _update_charges_display(value: float):
+            charges_display_label.configure(text=f"Charges Left: {int(value)} / 5")
 
+        # --- 2. Initial Path Cost Display (The Goal) ---
+        initial_cost_display_label = ctk.CTkLabel(
+            self, text="Initial Cost: ", **self.LABEL_INIT_PARAMS
+        )
+        initial_cost_display_label.pack(**self.LABEL_PACK_PARAMS)
+
+        def _update_initial_cost_display(value: float):
+            initial_cost_display_label.configure(text=f"Initial Cost: {value:.2f}")
+
+        # --- 3. Current Path Cost Display ---
+        current_cost_display_label = ctk.CTkLabel(
+            self, text="Current Cost: ", **self.LABEL_INIT_PARAMS
+        )
+        current_cost_display_label.pack(**self.LABEL_PACK_PARAMS)
+
+        def _update_current_cost_display(value: float):
+            current_cost_display_label.configure(text=f"Current Cost: {value:.2f}")
+
+        # --- 4. Win Status Display ---
         won_display_label = ctk.CTkLabel(
-            self, text="Map won: ", **self.LABEL_INIT_PARAMS
+            self, text="Solved: No", **self.LABEL_INIT_PARAMS
         )
         won_display_label.pack(**self.LABEL_PACK_PARAMS)
 
         def _update_won_display(value: bool):
-            won_display_label.configure(text=f"Map won: {'Yes' if value else 'No'}")
+            status = "Yes (WIN!)" if value else "No"
+            won_display_label.configure(text=f"Solved: {status}")
 
-        first_victory_display_label = ctk.CTkLabel(
-            self, text="", **self.LABEL_INIT_PARAMS
-        )
-        first_victory_display_label.pack(**self.LABEL_PACK_PARAMS)
-
-        def _update_first_victory_display(value: int):
-            if value == -1:
-                first_victory_display_label.pack_forget()
-            else:
-                first_victory_display_label.pack(**self.LABEL_PACK_PARAMS)
-                first_victory_display_label.configure(
-                    text=f"Attempts for 1st win: {int(value)}"
-                )
-
+        # --- 5. Hovered Gradient/Map Info Display (from canvas) ---
         hovered_gradient_display_label = ctk.CTkLabel(
             self, text="", **self.LABEL_INIT_PARAMS
         )
@@ -51,16 +59,21 @@ class GameStatsFrame(ctk.CTkFrame):
                 hovered_gradient_display_label.pack_forget()
             else:
                 hovered_gradient_display_label.pack(**self.LABEL_PACK_PARAMS)
-                hovered_gradient_display_label.configure(
-                    text=f"Path gradient at cursor: {value}"
-                )
+                hovered_gradient_display_label.configure(text=f"Map Gradient: {value}")
 
-        game_state_manager.add_callback("attempts", _update_attempts_display)
-        game_state_manager.add_callback("won", _update_won_display)
+        # --- Register New Callbacks ---
         game_state_manager.add_callback(
-            "attempts_before_first_victory", _update_first_victory_display
+            "tool_charges_remaining", _update_charges_display
         )
+        game_state_manager.add_callback(
+            "initial_path_cost", _update_initial_cost_display
+        )
+        game_state_manager.add_callback(
+            "current_path_cost", _update_current_cost_display
+        )
+        game_state_manager.add_callback("won", _update_won_display)
 
+        # --- Keep Existing Canvas Callback ---
         canvas_state_manager.add_callback(
             "hovered_gradient", _update_hovered_gradient_display
         )
