@@ -116,9 +116,9 @@ class GameManager:
 
         MessageOverlay(
             (
-                f"You won! Your map's traversal cost is at least {config.game.WIN_COST_MAX_PERCENTAGE*100}% cheaper than the original."
+                f"You won! Your map's traversal cost is at least {100 - config.game.WIN_COST_MAX_PERCENTAGE*100}% cheaper than the original."
                 if won
-                else f"You lost! Make sure your map's traversal cost is at least {config.game.WIN_COST_MAX_PERCENTAGE*100}% cheaper than the original."
+                else f"You lost! Make sure your map's traversal cost is at least {100 - config.game.WIN_COST_MAX_PERCENTAGE*100}% cheaper than the original."
             ),
             "Result",
         )

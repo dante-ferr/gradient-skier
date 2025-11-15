@@ -145,7 +145,27 @@ class MapGenerator:
         traps_map = np.zeros_like(xx)
 
         for _ in range(num_traps):
-            trap_x, trap_y = rng.uniform(-5, 5), rng.uniform(-5, 5)
+            bias_strength = self.config.FEATURE_CENTER_BIAS_STRENGTH
+
+            if bias_strength > 0:
+                # Rejection sampling to bias placement towards the center
+                while True:
+                    trap_x, trap_y = rng.uniform(-5, 5), rng.uniform(-5, 5)
+                    # Normalize distance from center (0,0) to a [0, 1] range
+                    # Max distance is from (0,0) to (5,5), which is sqrt(50)
+                    dist_from_center = np.sqrt(trap_x**2 + trap_y**2)
+                    normalized_dist = dist_from_center / np.sqrt(50)
+
+                    # Probability of acceptance is higher closer to the center
+                    # The strength parameter makes the falloff more or less aggressive
+                    acceptance_prob = (1.0 - normalized_dist) ** bias_strength
+
+                    if rng.random() < acceptance_prob:
+                        break  # Accepted this position
+            else:
+                # No bias, uniform placement
+                trap_x, trap_y = rng.uniform(-5, 5), rng.uniform(-5, 5)
+
             depth = -rng.uniform(
                 self.config.TRAP_ABSOLUTE_DEPTH_MIN, self.config.TRAP_ABSOLUTE_DEPTH_MAX
             )
@@ -165,7 +185,27 @@ class MapGenerator:
         ridges_map = np.zeros_like(xx)
 
         for _ in range(num_ridges):
-            ridge_x, ridge_y = rng.uniform(-5, 5), rng.uniform(-5, 5)
+            bias_strength = self.config.FEATURE_CENTER_BIAS_STRENGTH
+
+            if bias_strength > 0:
+                # Rejection sampling to bias placement towards the center
+                while True:
+                    ridge_x, ridge_y = rng.uniform(-5, 5), rng.uniform(-5, 5)
+                    # Normalize distance from center (0,0) to a [0, 1] range
+                    # Max distance is from (0,0) to (5,5), which is sqrt(50)
+                    dist_from_center = np.sqrt(ridge_x**2 + ridge_y**2)
+                    normalized_dist = dist_from_center / np.sqrt(50)
+
+                    # Probability of acceptance is higher closer to the center
+                    # The strength parameter makes the falloff more or less aggressive
+                    acceptance_prob = (1.0 - normalized_dist) ** bias_strength
+
+                    if rng.random() < acceptance_prob:
+                        break  # Accepted this position
+            else:
+                # No bias, uniform placement
+                ridge_x, ridge_y = rng.uniform(-5, 5), rng.uniform(-5, 5)
+
             height_val = rng.uniform(
                 self.config.RIDGE_ABSOLUTE_HEIGHT_MIN,
                 self.config.RIDGE_ABSOLUTE_HEIGHT_MAX,

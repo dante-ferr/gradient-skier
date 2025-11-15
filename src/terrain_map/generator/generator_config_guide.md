@@ -15,6 +15,7 @@ These parameters define the large-scale features of the map, like the main mount
 ## Terrain Features (`trap_*` and `ridge_*`)
 
 These parameters control the placement and shape of smaller, more distinct features on top of the base terrain.
+*   `"feature_center_bias_strength"`: Controls how strongly features (ridges and traps) are biased towards the center of the map. A value of `0.0` means no bias (uniform distribution). A value of `1.0` provides a linear bias. Values greater than `1.0` create a much stronger concentration of features at the center, with the effect becoming more pronounced as the number increases.
 
 ### Traps (Pits/Holes)
 
