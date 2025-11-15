@@ -30,7 +30,7 @@ class GameManager:
         self.path_manager.set_root(root)
         self.start_new_game()
 
-    def start_new_game(self):
+    def start_new_game(self, seed: int | None = None):
         """
         Resets the game to a new map and calculates the initial path.
         """
@@ -40,7 +40,7 @@ class GameManager:
             game_state_manager,
         )  # Local import to avoid circular dependency
 
-        map_manager.recreate_map()
+        map_manager.recreate_map(seed=seed)
         game_state_manager.reset_to_defaults()
         tool_charges_var = cast(
             ctk.IntVar, game_state_manager.vars["tool_charges_remaining"]

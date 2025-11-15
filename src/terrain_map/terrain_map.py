@@ -13,11 +13,12 @@ class TerrainMap:
     Also manages terraforming tool application.
     """
 
-    def __init__(self, height_data: np.ndarray):
+    def __init__(self, height_data: np.ndarray, seed: int | None = None):
         """
         Initializes the map with 2D height data (0-255).
         """
         self.height_data: np.ndarray = height_data.astype(float)
+        self.seed = seed
         self.height, self.width = height_data.shape
 
         # Using a dictionary of tool objects follows the Strategy pattern.

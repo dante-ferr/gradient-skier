@@ -20,23 +20,30 @@ class MapGenerator:
                     print(f"Warning: Config override key '{key}' not found.")
 
         # 'noise' library is functional (no init needed)
-        # Store a random base seed for this generator instance
-        self.seed_x_offset = random.uniform(0, 1000)
-        self.seed_y_offset = random.uniform(0, 1000)
+        self.seed_x_offset = 0
+        self.seed_y_offset = 0
 
-    def generate(self, width, height):
+    def generate(self, width: int, height: int, seed: int | None = None):
         """
         The main public method. Generates and returns a new TerrainMap.
         """
+        if seed is None:
+            seed = random.randint(0, 1_000_000_000)
+
+        # Use a seeded random number generator for deterministic results
+        rng = random.Random(seed)
+        self.seed_x_offset = rng.uniform(0, 1000)
+        self.seed_y_offset = rng.uniform(0, 1000)
+
         # 1. Create a coordinate grid
         xx, yy = np.meshgrid(
             np.linspace(-5, 5, width), np.linspace(-5, 5, height), indexing="ij"
         )
 
         # 2. Generate all noise layers
-        wide_map = self._generate_wide_variations(xx, yy)
-        traps_map = self._generate_traps(xx, yy, width, height)
-        ridges_map = self._generate_ridges(xx, yy, width, height)
+        wide_map = self._generate_wide_variations(xx, yy, rng)
+        traps_map = self._generate_traps(xx, yy, width, height, rng)
+        ridges_map = self._generate_ridges(xx, yy, width, height, rng)
         detail_map = self._generate_detail_noise(xx, yy)
 
         # 3. Combine all layers
@@ -45,9 +52,9 @@ class MapGenerator:
         # 4. Normalize the final map and create TerrainMap object
         normalized_map = self._normalize_to_255(total_map_float)
 
-        return TerrainMap(normalized_map)
+        return TerrainMap(normalized_map, seed=seed)
 
-    def _generate_wide_variations(self, xx, yy):
+    def _generate_wide_variations(self, xx, yy, rng: random.Random):
         """Generates the base rolling hills."""
         noise_map = np.zeros_like(xx)
         freq = self.config.WIDE_VARIATION_FREQUENCY
@@ -132,43 +139,41 @@ class MapGenerator:
             -((xx_warped - cx) ** 2 + (yy_warped - cy) ** 2) / safe_width_sq
         )
 
-    def _generate_traps(self, xx, yy, width, height):
+    def _generate_traps(self, xx, yy, width, height, rng: random.Random):
         """Generates the trap layer (negative features)."""
         area = width * height
         num_traps_base = int(area * self.config.TRAP_DENSITY)
-        num_traps = max(1, random.randint(num_traps_base - 1, num_traps_base + 2))
+        num_traps = max(1, rng.randint(num_traps_base - 1, num_traps_base + 2))
 
         traps_map = np.zeros_like(xx)
 
         for _ in range(num_traps):
-            trap_x, trap_y = random.uniform(-5, 5), random.uniform(-5, 5)
-            depth = -random.uniform(
+            trap_x, trap_y = rng.uniform(-5, 5), rng.uniform(-5, 5)
+            depth = -rng.uniform(
                 self.config.TRAP_ABSOLUTE_DEPTH_MIN, self.config.TRAP_ABSOLUTE_DEPTH_MAX
             )
-            width = random.uniform(
-                self.config.TRAP_WIDTH_MIN, self.config.TRAP_WIDTH_MAX
-            )
+            width = rng.uniform(self.config.TRAP_WIDTH_MIN, self.config.TRAP_WIDTH_MAX)
 
             traps_map += self._create_warped_gaussian(
                 xx, yy, trap_x, trap_y, depth, width
             )
         return traps_map
 
-    def _generate_ridges(self, xx, yy, width, height):
+    def _generate_ridges(self, xx, yy, width, height, rng: random.Random):
         """Generates the ridge layer (positive features)."""
         area = width * height
         num_ridges_base = int(area * self.config.RIDGE_DENSITY)
-        num_ridges = max(1, random.randint(num_ridges_base - 1, num_ridges_base + 2))
+        num_ridges = max(1, rng.randint(num_ridges_base - 1, num_ridges_base + 2))
 
         ridges_map = np.zeros_like(xx)
 
         for _ in range(num_ridges):
-            ridge_x, ridge_y = random.uniform(-5, 5), random.uniform(-5, 5)
-            height_val = random.uniform(
+            ridge_x, ridge_y = rng.uniform(-5, 5), rng.uniform(-5, 5)
+            height_val = rng.uniform(
                 self.config.RIDGE_ABSOLUTE_HEIGHT_MIN,
                 self.config.RIDGE_ABSOLUTE_HEIGHT_MAX,
             )
-            width = random.uniform(
+            width = rng.uniform(
                 self.config.RIDGE_WIDTH_MIN, self.config.RIDGE_WIDTH_MAX
             )
 

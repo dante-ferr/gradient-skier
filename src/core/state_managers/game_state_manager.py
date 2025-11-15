@@ -26,6 +26,8 @@ class GameStateManager(StateManager):
                 "player_can_interact": ctk.BooleanVar(value=False),
                 # The tool currently selected by the player.
                 "selected_tool": ctk.StringVar(value="excavator"),
+                # The seed of the current map.
+                "current_seed": ctk.StringVar(value="N/A"),
             }
         )
 

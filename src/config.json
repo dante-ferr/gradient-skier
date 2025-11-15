@@ -10,7 +10,7 @@
     "move_speed": 0.5,
     "stuck_area_steps": 10,
     "stuck_area_radius": 1.5,
-    "win_cost_max_percentage": 0.75
+    "win_cost_max_percentage": 0.5
   },
   "map_width": 120,
   "map_height": 120,
@@ -23,6 +23,6 @@
   },
   "pathfinding": {
     "flat_move_cost": 1.0,
-    "climb_cost_multiplier": 5.0
+    "climb_cost_multiplier": 3.5
   }
 }

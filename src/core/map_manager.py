@@ -12,10 +12,12 @@ if TYPE_CHECKING:
     from terrain_map.generator.map_generator import MapGenerator
 
 
-def generate_map_worker(queue: Queue):
+def generate_map_worker(queue: Queue, seed: int | None = None):
     """Worker function to run in a separate process."""
     generator = MapGenerator()
-    terrain_map = generator.generate(width=config.MAP_WIDTH, height=config.MAP_HEIGHT)
+    terrain_map = generator.generate(
+        width=config.MAP_WIDTH, height=config.MAP_HEIGHT, seed=seed
+    )
     queue.put(terrain_map)
 
 
@@ -50,7 +52,7 @@ class MapManager:
     def add_map_change_callback(self, callback):
         self._on_map_change_callbacks.append(callback)
 
-    def recreate_map(self):
+    def recreate_map(self, seed: int | None = None):
         from state_managers import canvas_state_manager
 
         if self.root is None:
@@ -59,7 +61,7 @@ class MapManager:
         map_loading_var = cast(ctk.BooleanVar, canvas_state_manager.vars["map_loading"])
         map_loading_var.set(True)
 
-        process = Process(target=generate_map_worker, args=(self.result_queue,))
+        process = Process(target=generate_map_worker, args=(self.result_queue, seed))
         process.start()
 
         # Poll for the result from the separate process.
@@ -68,9 +70,14 @@ class MapManager:
     def _on_map_generated(self, terrain_map: TerrainMap):
         # Local imports to avoid circular dependencies.
         from state_managers import canvas_state_manager
+        from state_managers import game_state_manager
         from game import game_manager
 
         self.map = terrain_map
+
+        seed_var = cast(ctk.StringVar, game_state_manager.vars["current_seed"])
+        seed_text = str(terrain_map.seed) if terrain_map.seed is not None else "N/A"
+        seed_var.set(seed_text)
 
         for callback in self._on_map_recreate_callbacks:
             callback()
@@ -99,7 +106,7 @@ class MapManager:
 
             height_data = np.array(map_data["height_data"], dtype=np.uint8)
 
-            self.map = TerrainMap(height_data)
+            self.map = TerrainMap(height_data, seed=map_data.get("seed"))
 
             print(f"Successfully loaded map from {filepath}")
 
