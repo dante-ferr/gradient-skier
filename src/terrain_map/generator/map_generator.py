@@ -19,7 +19,6 @@ class MapGenerator:
                 else:
                     print(f"Warning: Config override key '{key}' not found.")
 
-        # 'noise' library is functional (no init needed)
         self.seed_x_offset = 0
         self.seed_y_offset = 0
 
@@ -84,7 +83,6 @@ class MapGenerator:
         warp_amp = self.config.BASIN_WARP_AMPLITUDE
         warp_octaves = self.config.BASIN_WARP_OCTAVES
 
-        # --- Otimização: Pré-calcule coordenadas de ruído ---
         warp_points_x = xx * warp_freq
         warp_points_y = yy * warp_freq
         warp_points_x_offset = (xx + 10.0) * warp_freq  # Offset para ruído Y
@@ -112,7 +110,6 @@ class MapGenerator:
             ],
         )
 
-        # --- Loop é necessário, mas a função INTERNA é C-acelerada ---
         for wx, wy, wxo, wyo, x_out, y_out in it:
             x_out[...] = (
                 noise.pnoise2(
@@ -181,7 +178,6 @@ class MapGenerator:
                 xx, yy, ridge_x, ridge_y, height_val, width
             )
 
-            # --- Textura do cume ---
             ridge_texture_map = np.zeros_like(xx)
             freq = self.config.RIDGE_FREQUENCY
             amp = self.config.RIDGE_AMPLITUDE
@@ -198,7 +194,6 @@ class MapGenerator:
                     octaves=octaves,
                 )
 
-            # Aplicar textura apenas onde o cume existe (valores > 0)
             ridge_mask = ridge_base > 0
             ridge_with_texture = ridge_base * (1.0 + ridge_texture_map * amp)
             ridges_map += np.where(ridge_mask, ridge_with_texture, ridge_base)
