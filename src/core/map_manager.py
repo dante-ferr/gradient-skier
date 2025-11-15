@@ -24,11 +24,22 @@ class MapManager:
 
     def __init__(self):
         self.generator = MapGenerator()
-        self.map: "TerrainMap | None" = None
+        self._map: "TerrainMap | None" = None
         self.root: "ctk.CTk | None" = None
         self.result_queue: "Queue[TerrainMap]" = Queue()
 
         self._on_map_recreate_callbacks = []
+        self._on_map_change_callbacks = []
+
+    @property
+    def map(self):
+        if self._map is None:
+            raise Exception("No map loaded")
+        return self._map
+
+    @map.setter
+    def map(self, value):
+        self._map = value
 
     def set_root(self, root: ctk.CTk):
         self.root = root
@@ -36,14 +47,17 @@ class MapManager:
     def add_map_recreate_callback(self, callback):
         self._on_map_recreate_callbacks.append(callback)
 
+    def add_map_change_callback(self, callback):
+        self._on_map_change_callbacks.append(callback)
+
     def recreate_map(self):
         from state_managers import canvas_state_manager
 
         if self.root is None:
             raise RuntimeError("MapManager's root has not been set.")
 
-        loading_var = cast(ctk.BooleanVar, canvas_state_manager.vars["loading"])
-        loading_var.set(True)
+        map_loading_var = cast(ctk.BooleanVar, canvas_state_manager.vars["map_loading"])
+        map_loading_var.set(True)
 
         # Run generation in a separate process
         process = Process(target=generate_map_worker, args=(self.result_queue,))
@@ -61,13 +75,10 @@ class MapManager:
         for callback in self._on_map_recreate_callbacks:
             callback()
 
-        if map_manager.map is None:
-            raise Exception("No map loaded")
-
-        loading_var = cast(ctk.BooleanVar, canvas_state_manager.vars["loading"])
-        loading_var.set(False)
-
         game_manager.calculate_initial_path()
+
+        map_loading_var = cast(ctk.BooleanVar, canvas_state_manager.vars["map_loading"])
+        map_loading_var.set(False)
 
     def _check_for_map_result(self):
         """Polls the queue for a generated map."""
@@ -97,6 +108,14 @@ class MapManager:
 
         except (FileNotFoundError, KeyError, json.JSONDecodeError) as e:
             print(f"Error loading map from {filepath}: {e}")
+
+    def apply_tool(self, tool_type: str, center_x: int, center_y: int) -> bool:
+        successful_mod = self.map.apply_tool(tool_type, center_x, center_y)
+
+        for callback in self._on_map_change_callbacks:
+            callback()
+
+        return successful_mod
 
 
 map_manager = MapManager()

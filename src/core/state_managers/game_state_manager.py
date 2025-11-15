@@ -23,7 +23,7 @@ class GameStateManager(StateManager):
                 # True if current_cost < initial_cost
                 "won": ctk.BooleanVar(value=False),
                 # Use this to disable buttons while Pathfinder is running
-                "player_can_interact": ctk.BooleanVar(value=True),
+                "player_can_interact": ctk.BooleanVar(value=False),
                 # New: The tool currently selected by the player
                 "selected_tool": ctk.StringVar(value="Excavator"),
             }

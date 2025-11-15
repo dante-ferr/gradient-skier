@@ -12,18 +12,20 @@ class CanvasMapRenderer:
     """Handles drawing objects onto the MapCanvas."""
 
     def __init__(self, canvas: "MapCanvas"):
-        from core.map_manager import map_manager
+        from core import map_manager
 
         self.canvas = canvas
+        self._reset_cache()
+
+        map_manager.add_map_change_callback(self.change_map)
+
+    def _reset_cache(self):
         self.image_cache = {}
         self.original_pil_images = {}
         self.current_photo_images = {}
 
-    def render_map(self):
-        """Generates a new map and renders it on the canvas."""
+    def _create_terrain_image(self):
         terrain_map = map_manager.map
-        if not terrain_map:
-            return
 
         height_data = terrain_map.height_data
         colored_data = cm.terrain(height_data / 255.0)  # type: ignore
@@ -37,9 +39,25 @@ class CanvasMapRenderer:
         self.image_cache[("terrain_map", 1)] = photo_image
         self.current_photo_images["terrain_map"] = photo_image
 
+        return photo_image
+
+    def render_map(self):
+        """Generates a new map and renders it on the canvas."""
+        photo_image = self._create_terrain_image()
         self.canvas.create_image(
             0, 0, image=photo_image, anchor="nw", tags="terrain_map"
         )
+
+        self.rescale()
+
+    def change_map(self):
+        tag = "terrain_map"
+
+        self._reset_cache()
+        new_photo_image = self._create_terrain_image()
+        self.canvas.itemconfig(tag, image=new_photo_image)
+
+        self.rescale()
 
     def rescale(self):
         """Rescales the 'terrain_map' image based on the current canvas zoom level."""
@@ -54,8 +72,8 @@ class CanvasMapRenderer:
             if not original_pil_image:
                 return
 
-            new_width = original_pil_image.width * zoom
-            new_height = original_pil_image.height * zoom
+            new_width = int(original_pil_image.width * zoom)
+            new_height = int(original_pil_image.height * zoom)
 
             scaled_pil_image = original_pil_image.resize(
                 (new_width, new_height), Image.NEAREST  # type: ignore

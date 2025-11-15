@@ -73,6 +73,7 @@ class TerrainMap:
             return False
 
         # Apply the tool's specific logic defined in the tool class
+        print(f"Applying {tool.name} tool at ({center_x}, {center_y})")
         modified = tool.apply(self, center_x, center_y)
 
         if modified:

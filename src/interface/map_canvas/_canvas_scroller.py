@@ -16,11 +16,11 @@ class CanvasScroller:
 
         self.scrolling = False
 
-        self.canvas.after(250, self._configure_zoom)
+        self.canvas.after(250, self.configure_zoom)
 
         self.canvas.bind("<Configure>", self._on_resize)
 
-    def _configure_zoom(self):
+    def configure_zoom(self):
         from state_managers import canvas_state_manager
 
         initial_zoom: int = min(
@@ -57,8 +57,7 @@ class CanvasScroller:
 
     def _on_resize(self, event):
         """Handle window resizing."""
-        self.canvas.update_idletasks()
-        self._center_canvas()
+        self.configure_zoom()
 
     def _start_scroll(self, event):
         """Start scrolling when the right mouse button is pressed."""
@@ -80,9 +79,6 @@ class CanvasScroller:
     def _clamped_scroll_position(self, x: int, y: int) -> tuple[int, int]:
         """Clamp the scroll position to the canvas boundaries."""
         from core import map_manager
-
-        if not map_manager.map:
-            return (0, 0)
 
         zoom = self.canvas.zoom_level
 

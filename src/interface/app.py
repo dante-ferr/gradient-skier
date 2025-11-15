@@ -2,10 +2,11 @@ import customtkinter as ctk
 from .sidebar import Sidebar
 from .theme import theme
 from .map_canvas import MapCanvas
+from .loading_manager import LoadingManager
+
 
 ctk.set_appearance_mode("Dark")
 ctk.set_default_color_theme(str(theme.path))
-
 
 class App(ctk.CTk):
     def __init__(self):
@@ -31,41 +32,42 @@ class App(ctk.CTk):
         self.left_frame.grid_rowconfigure(0, weight=0)
         self.left_frame.grid_rowconfigure(1, weight=1)
 
-        self.loading_frame = ctk.CTkFrame(self.left_frame, fg_color="transparent")
-        self.loading_label = ctk.CTkLabel(
-            self.loading_frame, text="Generating new map...", font=ctk.CTkFont(size=20)
-        )
-        self.loading_label.pack(pady=10)
-        self.loading_progress = ctk.CTkProgressBar(
-            self.loading_frame, mode="indeterminate"
-        )
-        self.loading_progress.pack(pady=10, padx=20, fill="x")
-
         sidebar = Sidebar(self)
         sidebar.grid(row=0, column=1, sticky="nsew", padx=0, pady=0)
 
-        # map_manager.load_map_from_json()
-
         self.canvas: MapCanvas | None = None
+
+        self.loading_manager = LoadingManager(
+            self.left_frame, on_load_finish_callback=self._on_all_loading_finished
+        )
 
         from state_managers import canvas_state_manager
 
-        canvas_state_manager.add_callback("loading", self._on_map_loading)
+        canvas_state_manager.add_callback(
+            "map_loading",
+            lambda loading: self.loading_manager.on_loading_change(
+                "map", "Loading Map...", loading
+            ),
+        )
+        canvas_state_manager.add_callback(
+            "path_loading",
+            lambda loading: self.loading_manager.on_loading_change(
+                "path", "Calculating Path...", loading
+            ),
+        )
 
-    def _on_map_loading(self, loading: bool):
-        if loading:
-            if self.canvas is not None:
-                self.canvas.grid_forget()
-
-            self.loading_frame.place(relx=0.5, rely=0.5, anchor="center")
-            self.loading_progress.start()
-        else:
+    def _on_all_loading_finished(self):
+        """Callback for when the LoadingManager reports no more active loaders."""
+        if self.canvas is None:
             self._on_game_start()
-            self.loading_progress.stop()
-            self.loading_frame.place_forget()
+        else:
+            self.canvas.grid(row=1, column=0, sticky="nsew")
 
     def _on_game_start(self):
+        """Initializes and displays the main map canvas."""
         self.canvas = MapCanvas(self.left_frame)
         self.canvas.grid(row=1, column=0, sticky="nsew")
-        # Ensure canvas is drawn under the loading frame if it's active
-        self.loading_frame.lift()
+        self.loading_manager.set_canvas(self.canvas)
+        # Ensure loading container is on top if a new loading task started
+        # while the canvas was being created.
+        self.loading_manager.loading_container.lift()

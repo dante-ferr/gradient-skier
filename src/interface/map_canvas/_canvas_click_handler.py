@@ -48,5 +48,4 @@ class CanvasClickHandler:
         map_x, map_y = self.canvas.canvas_to_map_coords(event.x, event.y)
 
         # 3. Apply the tool via the GameManager
-        print(f"Applying tool '{tool_type}' at map coords ({map_x}, {map_y}).")
         game_manager.use_tool_at(tool_type, map_x, map_y)
