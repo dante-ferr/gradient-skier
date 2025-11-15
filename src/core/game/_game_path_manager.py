@@ -71,12 +71,10 @@ class GamePathManager:
         from state_managers import canvas_state_manager, game_state_manager
 
         if not self.root:
-            print("Root is not set, cannot start async path calculation.")
-            return
+            raise RuntimeError("Root has not been set.")
 
         if not map_manager.map:
-            print("Map is not loaded, cannot start path calculation.")
-            return
+            raise Exception("The map is not loaded.")
 
         path_loading_var = cast(
             ctk.BooleanVar, canvas_state_manager.vars["path_loading"]
@@ -115,6 +113,7 @@ class GamePathManager:
     def _on_path_found(self, path_obj: Path, is_initial: bool):
         """Processes the pathfinding result from the worker."""
         from state_managers import game_state_manager, canvas_state_manager
+        from game import game_manager
 
         self.current_path = path_obj
         self.current_cost = path_obj.total_cost
@@ -129,10 +128,8 @@ class GamePathManager:
             cast(ctk.DoubleVar, game_state_manager.vars["initial_path_cost"]).set(
                 self.initial_cost
             )
-            cast(ctk.BooleanVar, game_state_manager.vars["won"]).set(False)
         else:
-            won = self.current_cost < self.initial_cost and self.current_path.is_valid
-            cast(ctk.BooleanVar, game_state_manager.vars["won"]).set(bool(won))
+            game_manager.judge_match()
 
         path_loading_var = cast(
             ctk.BooleanVar, canvas_state_manager.vars["path_loading"]

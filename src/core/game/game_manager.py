@@ -3,7 +3,7 @@ from config import config
 from typing import Callable, cast
 from ._game_path_manager import GamePathManager
 from ._path import Path
-
+from interface.components.overlay.message_overlay import MessageOverlay
 
 class GameManager:
     def __init__(self):
@@ -102,6 +102,25 @@ class GameManager:
 
         cast(ctk.BooleanVar, game_state_manager.vars["player_can_interact"]).set(
             can_interact
+        )
+
+    def judge_match(self):
+        from state_managers import game_state_manager
+
+        won = (
+            self.path_manager.current_cost
+            <= self.path_manager.initial_cost * config.game.WIN_COST_MAX_PERCENTAGE
+            and self.path_manager.current_path.is_valid
+        )
+        cast(ctk.BooleanVar, game_state_manager.vars["won"]).set(bool(won))
+
+        MessageOverlay(
+            (
+                f"You won! Your map's traversal cost is at least {config.game.WIN_COST_MAX_PERCENTAGE*100}% cheaper than the original."
+                if won
+                else f"You lost! Make sure your map's traversal cost is at least {config.game.WIN_COST_MAX_PERCENTAGE*100}% cheaper than the original."
+            ),
+            "Result",
         )
 
 

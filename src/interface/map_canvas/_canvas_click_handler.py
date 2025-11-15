@@ -1,5 +1,6 @@
 from typing import TYPE_CHECKING, cast
 import customtkinter as ctk
+from interface.components.overlay.message_overlay import MessageOverlay
 
 if TYPE_CHECKING:
     from .map_canvas import MapCanvas
@@ -27,7 +28,7 @@ class CanvasClickHandler:
             ctk.BooleanVar, game_state_manager.vars["player_can_interact"]
         )
         if not player_can_interact_var.get():
-            print("Interaction temporarily disabled (calculating path).")
+            print("Interaction temporarily disabled.")
             return
 
         # Check if the player has any tool charges left
@@ -35,7 +36,10 @@ class CanvasClickHandler:
             ctk.IntVar, game_state_manager.vars["tool_charges_remaining"]
         )
         if tool_charges_var.get() <= 0:
-            print("No tool charges remaining. Reset the map to play again.")
+            MessageOverlay(
+                "You have no tool charges left. Please reset the map to play again.",
+                "Warning",
+            )
             return
 
         # 1. Get the currently selected tool from the game state manager
