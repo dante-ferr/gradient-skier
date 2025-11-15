@@ -2,7 +2,7 @@ import customtkinter as ctk
 from .sidebar import Sidebar
 from .theme import theme
 from .map_canvas import MapCanvas
-from .loading_manager import LoadingManager
+from ._loading_manager import LoadingManager
 
 
 ctk.set_appearance_mode("Dark")
@@ -46,7 +46,7 @@ class App(ctk.CTk):
         canvas_state_manager.add_callback(
             "map_loading",
             lambda loading: self.loading_manager.on_loading_change(
-                "map", "Loading Map...", loading
+                "map", "Creating Map...", loading
             ),
         )
         canvas_state_manager.add_callback(

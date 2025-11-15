@@ -1,5 +1,6 @@
 import customtkinter as ctk
 from typing import Any
+from config import config
 
 class GameStatsFrame(ctk.CTkFrame):
     LABEL_INIT_PARAMS: dict[str, Any] = {"font": ("", 16)}
@@ -18,7 +19,9 @@ class GameStatsFrame(ctk.CTkFrame):
         charges_display_label.pack(**self.LABEL_PACK_PARAMS)
 
         def _update_charges_display(value: float):
-            charges_display_label.configure(text=f"Charges Left: {int(value)} / 5")
+            charges_display_label.configure(
+                text=f"Charges Left: {int(value)} / {config.tool.MAX_TOOL_CHARGES}"
+            )
 
         # --- 2. Initial Path Cost Display (The Goal) ---
         initial_cost_display_label = ctk.CTkLabel(

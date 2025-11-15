@@ -3,7 +3,7 @@ from config import config
 from typing import cast
 
 
-class BottomFrame(ctk.CTkFrame):
+class SettingsFrame(ctk.CTkFrame):
     def __init__(self, parent):
 
         super().__init__(parent, fg_color="transparent")

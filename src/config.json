@@ -14,11 +14,11 @@
   "map_width": 120,
   "map_height": 120,
   "tool": {
-    "tool_radius": 5,
-    "excavator_depth": 10.0,
-    "filler_height": 10.0,
+    "tool_radius": 8,
+    "excavator_depth": 18.0,
+    "filler_height": 18.0,
     "grader_intensity": 0.5,
-    "max_tool_charges": 5
+    "max_tool_charges": 20
   },
   "pathfinding": {
     "flat_move_cost": 1.0,

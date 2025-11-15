@@ -23,9 +23,9 @@ class TerrainMap:
 
         # Initialize the tools dictionary for quick lookup (Strategy pattern)
         self._tools: "dict[str, TerrainTool]" = {
-            "Excavator": ExcavatorTool(),
-            "Filler": FillerTool(),
-            "Grader": GraderTool(),
+            "excavator": ExcavatorTool(),
+            "filler": FillerTool(),
+            "grader": GraderTool(),
         }
 
         # Pre-calculate gradient maps
