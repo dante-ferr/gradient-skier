@@ -59,14 +59,14 @@ class MapManager:
         map_loading_var = cast(ctk.BooleanVar, canvas_state_manager.vars["map_loading"])
         map_loading_var.set(True)
 
-        # Run generation in a separate process
         process = Process(target=generate_map_worker, args=(self.result_queue,))
         process.start()
 
-        # Start polling for the result
+        # Poll for the result from the separate process.
         self.root.after(self.MAP_RESULT_INTERVAL, self._check_for_map_result)
 
     def _on_map_generated(self, terrain_map: TerrainMap):
+        # Local imports to avoid circular dependencies.
         from state_managers import canvas_state_manager
         from game import game_manager
 

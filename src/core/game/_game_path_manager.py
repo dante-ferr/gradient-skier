@@ -19,10 +19,8 @@ def find_path_worker(
     Calculates the path and puts the result (Path object and is_initial flag)
     into the queue.
     """
-    print("Finding path (worker)...")
     pathfinder = Pathfinder(terrain_map)
     path_obj = pathfinder.find_path(start, end)
-    print("Path found (worker).")
     queue.put((path_obj, is_initial))
 
 
@@ -89,7 +87,6 @@ class GamePathManager:
         )
         player_can_interact_var.set(False)
 
-        print("Spawning pathfinder worker...")
         current_map = map_manager.map
 
         process = Process(
@@ -119,7 +116,6 @@ class GamePathManager:
         """Processes the pathfinding result from the worker."""
         from state_managers import game_state_manager, canvas_state_manager
 
-        print("Path processing...")
         self.current_path = path_obj
         self.current_cost = path_obj.total_cost
 
@@ -148,7 +144,6 @@ class GamePathManager:
         player_can_interact_var.set(True)
 
         self._fire_path_recalculated_callbacks()
-        print("Path processing complete.")
 
     def _fire_path_recalculated_callbacks(self):
         """Notifies all subscribed UI components about the new path."""

@@ -22,10 +22,10 @@ class StateManager:
             var.trace_add("write", lambda *args, n=name: self._notify_callbacks(n))
 
     def add_callback(self, name: str, callback: Callable[[Any], None]):
-        """Register a callback for a state variable change and call it immediately."""
+        """Registers a callback for a state variable change and calls it immediately."""
         if name in self._callbacks:
             self._callbacks[name].append(callback)
-            # Immediately call callback with current value
+            # Immediately invoke callback with the current value.
             callback(self.vars[name].get())
         else:
             raise ValueError(f"Unknown state variable: {name}")

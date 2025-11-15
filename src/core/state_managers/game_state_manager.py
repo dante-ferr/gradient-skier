@@ -16,15 +16,15 @@ class GameStateManager(StateManager):
                 "tool_charges_remaining": ctk.IntVar(
                     value=config.TOOL.MAX_TOOL_CHARGES
                 ),
-                # The cost of the path on the original, unmodified map
+                # Cost of the path on the original, unmodified map.
                 "initial_path_cost": ctk.DoubleVar(value=0.0),
-                # The cost of the path on the *current*, modified map
+                # Cost of the path on the current, modified map.
                 "current_path_cost": ctk.DoubleVar(value=0.0),
-                # True if current_cost < initial_cost
+                # True if current_path_cost < initial_path_cost.
                 "won": ctk.BooleanVar(value=False),
-                # Use this to disable buttons while Pathfinder is running
+                # Disables UI interaction while pathfinding is in progress.
                 "player_can_interact": ctk.BooleanVar(value=False),
-                # New: The tool currently selected by the player
+                # The tool currently selected by the player.
                 "selected_tool": ctk.StringVar(value="excavator"),
             }
         )

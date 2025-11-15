@@ -17,11 +17,10 @@ class TerrainMap:
         """
         Initializes the map with 2D height data (0-255).
         """
-        # Ensure height data is float for modification
         self.height_data: np.ndarray = height_data.astype(float)
         self.height, self.width = height_data.shape
 
-        # Initialize the tools dictionary for quick lookup (Strategy pattern)
+        # Using a dictionary of tool objects follows the Strategy pattern.
         self._tools: "dict[str, TerrainTool]" = {
             "excavator": ExcavatorTool(),
             "filler": FillerTool(),
@@ -36,22 +35,21 @@ class TerrainMap:
         Uses a Sobel filter to calculate the partial derivatives (gradient)
         of the terrain, storing them in gradient_x and gradient_y.
         """
-        # self.gradient_y corresponds to df/dy (changes along axis 0)
+        # gradient_y corresponds to df/dy (changes along axis 0).
         self.gradient_y = sobel(self.height_data, axis=0)
-        # self.gradient_x corresponds to df/dx (changes along axis 1)
+        # gradient_x corresponds to df/dx (changes along axis 1).
         self.gradient_x = sobel(self.height_data, axis=1)
 
     def get_height_at(self, px: int, py: int) -> float:
         """Gets the height at a specific pixel coordinate."""
         if 0 <= px < self.width and 0 <= py < self.height:
             return self.height_data[py, px]
-        return 0.0  # Default height for out-of-bounds
+        return 0.0
 
     def get_gradient_magnitude_at(self, px: int, py: int) -> float:
         """
-        Gets the magnitude (steepness) of the gradient at a pixel.
-        This is the core of the A* pathfinding cost.
-        Cost = sqrt( (df/dx)^2 + (df/dy)^2 )
+        Calculates the gradient magnitude (steepness) at a pixel, which is
+        used as the core of the A* pathfinding cost.
         """
         if 0 <= px < self.width and 0 <= py < self.height:
             gx = self.gradient_x[py, px]
@@ -61,23 +59,18 @@ class TerrainMap:
 
     def apply_tool(self, tool_type: str, center_x: int, center_y: int) -> bool:
         """
-        Applies the tool effect via the dedicated tool class and
-        recalculates gradients.
-
+        Applies a tool's effect and recalculates gradients if the map was modified.
         Returns True if the modification was successful.
         """
         tool = self._tools.get(tool_type)
 
         if tool is None:
-            print(f"Unknown tool type: {tool_type}")
-            return False
+            raise Exception(f"Unknown tool type: {tool_type}")
 
-        # Apply the tool's specific logic defined in the tool class
-        print(f"Applying {tool.name} tool at ({center_x}, {center_y})")
         modified = tool.apply(self, center_x, center_y)
 
         if modified:
-            # CRITICAL: Recalculate gradients after modification
+            # Gradients must be recalculated after any terrain modification.
             self._calculate_gradients()
             return True
 

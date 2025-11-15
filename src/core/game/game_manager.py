@@ -13,7 +13,6 @@ class GameManager:
 
         self.path_manager = GamePathManager(self.start_point, self.end_point)
 
-        # Callbacks for UI updates
         self.on_game_start_callbacks: list[Callable] = []
 
     @property
@@ -29,7 +28,6 @@ class GameManager:
     def set_root(self, root: ctk.CTk):
         self.root = root
         self.path_manager.set_root(root)
-        # Start the game as soon as the map is ready (or on a button press)
         self.start_new_game()
 
     def start_new_game(self):
@@ -37,12 +35,12 @@ class GameManager:
         Resets the game to a new map and calculates the initial path.
         """
         # Import local
-        from core import map_manager
-        from state_managers import game_state_manager
+        from core import map_manager  # Local import to avoid circular dependency
+        from state_managers import (
+            game_state_manager,
+        )  # Local import to avoid circular dependency
 
         map_manager.recreate_map()
-
-        # Reset game state variables
         game_state_manager.reset_to_defaults()
         tool_charges_var = cast(
             ctk.IntVar, game_state_manager.vars["tool_charges_remaining"]
@@ -67,7 +65,9 @@ class GameManager:
         Applies a tool, modifies the map, and triggers a path recalculation.
         """
         # Import local
-        from state_managers import game_state_manager
+        from state_managers import (
+            game_state_manager,
+        )  # Local import to avoid circular dependency
         from core import map_manager
 
         if not map_manager.map:
@@ -78,27 +78,24 @@ class GameManager:
         )
 
         if tool_charges_var.get() <= 0:
-            print("No tool charges remaining.")
             return
 
-        # 1. Modify the terrain
         modification_success = map_manager.apply_tool(tool_type, x, y)
 
         if not modification_success:
-            print("Tool use failed (e.g., out of bounds)")
             return
 
-        # 2. Decrement tool charges
         tool_charges_var.set(tool_charges_var.get() - 1)
 
-        # 3. Recalculate the path on the modified terrain
+        # Recalculate the path on the modified terrain.
+        # This is deferred if it's the last tool charge to allow the UI to update.
         if tool_charges_var.get() <= 0:
             self.root.after(1, self.path_manager.recalculate_current_path)
 
     def _set_player_can_interact(self, can_interact: bool):
         """
-        Updates a state variable to enable/disable UI controls, preventing
-        actions during path calculation.
+        Updates a state variable to enable/disable UI controls.
+        This prevents user actions during path calculation.
         """
         # Import local
         from state_managers import game_state_manager
