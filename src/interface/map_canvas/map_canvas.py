@@ -31,6 +31,7 @@ class MapCanvas(ctk.CTkCanvas):
         self.configure(bg="black")
 
         game_manager.add_on_path_recalculated_callback(self._path_recalculated_callback)
+        game_manager.add_on_game_start_callback(self._on_new_game_started)
 
         self.gradient_display: Optional[int] = None
         self.bind("<Motion>", self._on_mouse_motion)
@@ -48,7 +49,7 @@ class MapCanvas(ctk.CTkCanvas):
             return
 
         # Initial call to render the fixed start and end pins
-        self.pins_renderer.render_pin(game_manager.start_point, "🚚", pin_id="start")
+        self.pins_renderer.render_pin(game_manager.start_point, "🏠", pin_id="start")
         self.pins_renderer.render_pin(game_manager.end_point, "🏁", pin_id="end")
 
     def _path_recalculated_callback(self, path: "Path"):
@@ -56,6 +57,12 @@ class MapCanvas(ctk.CTkCanvas):
         Callback for when the pathfinding algorithm generates a new path.
         """
         self.path_renderer.render_path(path.nodes)
+
+    def _on_new_game_started(self):
+        """
+        Callback for when a new game is started.
+        """
+        self.map_renderer.render_map()
 
     @property
     def zoom_level(self) -> int:

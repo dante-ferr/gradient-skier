@@ -58,10 +58,7 @@ class App(ctk.CTk):
 
     def _on_all_loading_finished(self):
         """Callback for when the LoadingManager reports no more active loaders."""
-        if self.canvas is None:
-            self._on_game_start()
-        else:
-            self.canvas.grid(row=1, column=0, sticky="nsew")
+        self._on_game_start()
 
     def _on_game_start(self):
         """Initializes and displays the main map canvas."""

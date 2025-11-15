@@ -43,10 +43,16 @@ class CanvasMapRenderer:
 
     def render_map(self):
         """Generates a new map and renders it on the canvas."""
-        photo_image = self._create_terrain_image()
-        self.canvas.create_image(
-            0, 0, image=photo_image, anchor="nw", tags="terrain_map"
-        )
+        print("rendering map")
+        tag = "terrain_map"
+        self._reset_cache()
+        new_photo_image = self._create_terrain_image()
+
+        # Check if the image item already exists
+        if self.canvas.find_withtag(tag):
+            self.canvas.itemconfig(tag, image=new_photo_image)
+        else:
+            self.canvas.create_image(0, 0, image=new_photo_image, anchor="nw", tags=tag)
 
         self.rescale()
 

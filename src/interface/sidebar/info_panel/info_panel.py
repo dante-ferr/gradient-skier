@@ -32,7 +32,7 @@ class InfoPanel(ctk.CTkFrame):
         self.tools_frame.grid(row=1, column=0, sticky="ew", **self.FRAME_GRID_PARAMS)
 
         self.settings_frame = SettingsFrame(self)
-        self.settings_frame.grid(row=1, column=1, sticky="ew", **self.FRAME_GRID_PARAMS)
+        self.settings_frame.grid(row=1, column=1, sticky="es", **self.FRAME_GRID_PARAMS)
 
     def _start_new_game(self):
         from game import game_manager

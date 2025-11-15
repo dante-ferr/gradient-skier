@@ -47,5 +47,4 @@ class LoadingManager:
                 self.canvas_to_manage.grid_forget()
         else:
             self.loading_container.place_forget()
-            # This callback will handle creating or showing the canvas
             self.on_load_finish_callback()
