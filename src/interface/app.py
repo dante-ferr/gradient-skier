@@ -15,7 +15,7 @@ class App(ctk.CTk):
         from game import game_manager
         from core import map_manager
 
-        self.title("Gradient Skier")
+        self.title("Gradient Engineer")
         self.attributes("-zoomed", True)
         self.minsize(width=800, height=600)
 

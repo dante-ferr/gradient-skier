@@ -5,9 +5,9 @@ if TYPE_CHECKING:
 
 
 class CanvasPathRenderer:
-    """Handles drawing the skier's path on the canvas."""
+    """Handles drawing the path on the canvas."""
 
-    PATH_TAG = "skier_path"
+    PATH_TAG = "path"
     PATH_COLOR = "red"
     PATH_WIDTH = 2
 
@@ -17,7 +17,7 @@ class CanvasPathRenderer:
 
     def render_path(self, path_points: list[tuple[float, float]]):
         """
-        Renders the skier's path on the canvas.
+        Renders the path on the canvas.
 
         Args:
             path_points (list[tuple[float, float]]): A list of (x, y) map coordinates.

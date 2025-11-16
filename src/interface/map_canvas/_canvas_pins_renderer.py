@@ -10,9 +10,7 @@ class CanvasPinsRenderer:
         self.canvas = canvas
         self.pins = {}
 
-    def render_pin(
-        self, position: tuple[float, float], emoji: str = "⛷️", pin_id: str = "skier"
-    ):
+    def render_pin(self, position: tuple[float, float], emoji: str, pin_id: str):
         """
         Renders or updates a pin on the canvas. If a pin with the given pin_id
         already exists, it's moved. Otherwise, a new pin is created.
@@ -20,7 +18,7 @@ class CanvasPinsRenderer:
         Args:
             position (tuple[float, float]): The (x, y) map coordinates for the pin.
             emoji (str): The emoji to display on the pin.
-            pin_id (str): A unique identifier for the pin (e.g., 'skier', 'shelter').
+            pin_id (str): A unique identifier for the pin.
         """
         canvas_x, canvas_y = self._get_canvas_pos(position)
 

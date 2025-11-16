@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "gradient-skier"
+name = "gradient-engineer"
 version = "0.1.0"
 description = ""
 authors = ["Dante Ferreira, Henrique Ceita"]
