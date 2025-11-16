@@ -18,16 +18,25 @@ class RestartFrame(ctk.CTkFrame):
         )
         self.restart_button.grid(row=0, column=0, sticky="ne", pady=(4, 0))
 
+        seed_frame = ctk.CTkFrame(self, fg_color="transparent")
+        seed_frame.grid(row=1, column=0, sticky="ne", pady=(8, 0))
+
+        self.seed_label = ctk.CTkLabel(
+            seed_frame,
+            text="Next map seed (optional)",
+            font=("", 12),
+        )
+        self.seed_label.grid(row=0, column=0, sticky="w", padx=(0, 4))
+
         validate_cmd = self.register(self._validate_seed_input)
         self.seed_input = ctk.CTkEntry(
-            self,
-            placeholder_text="Enter seed (optional)",
+            seed_frame,
             font=("", 16),
             width=192,
             validate="key",
             validatecommand=(validate_cmd, "%P"),
         )
-        self.seed_input.grid(row=1, column=0, sticky="ne", pady=(4, 0))
+        self.seed_input.grid(row=1, column=0, sticky="ne")
 
         game_state_manager.add_callback(
             "player_can_interact", self._update_button_state
