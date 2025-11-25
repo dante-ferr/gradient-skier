@@ -1,7 +1,7 @@
 import customtkinter as ctk
 from interface.components.svg_image import SvgImage
 from interface.theme import theme
-from src.config import config
+from config import config
 from typing import cast
 
 

@@ -40,7 +40,7 @@ class EmojiPin:
         if self._cached_image:
             return self._cached_image
 
-        pin_svg_path = str(config.ASSETS_PATH / "svg" / "pin.svg")
+        pin_svg_path = str(config.ASSETS_PATH.joinpath("svg", "pin.svg"))
         pin_image_obj = SvgImage(
             svg_path=pin_svg_path, fill=self.pin_color, size=self.size
         )
@@ -81,7 +81,7 @@ class EmojiPin:
         Renders an emoji from the font file into a PIL Image using cairosvg.
         This bypasses FreeType's lack of SVG hooks.
         """
-        font_path = str(config.ASSETS_PATH / "fonts" / "NotoColorEmoji.ttf")
+        font_path = str(config.ASSETS_PATH.joinpath("fonts", "NotoColorEmoji.ttf"))
         emoji_size_factor = 0.6
         emoji_pixel_size = int(self.size[0] * emoji_size_factor)
 

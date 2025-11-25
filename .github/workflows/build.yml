@@ -21,6 +21,12 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
+    - name: Install Tkinter (Linux)
+      if: runner.os == 'Linux'
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y python3-tk
+
     - name: Set up Python 3.12
       uses: actions/setup-python@v5
       with:
@@ -29,17 +35,32 @@ jobs:
     - name: Install Poetry
       run: pip install poetry
 
+    - name: Configure Poetry
+      run: poetry config virtualenvs.in-project true
+
+    - name: Install GTK3 Runtime (Windows)
+      if: matrix.os == 'windows-latest'
+      run: choco install gtk-runtime -y
+
+    - name: Locate GTK DLLs
+      if: matrix.os == 'windows-latest'
+      shell: powershell
+      run: |
+        $file = Get-ChildItem -Path "C:\Program Files", "C:\Program Files (x86)", "C:\ProgramData" -Filter "libcairo-2.dll" -Recurse -ErrorAction SilentlyContinue | Select-Object -First 1
+        
+        if ($file) {
+            Write-Host "DLL Encontrada em: $($file.DirectoryName)"
+            echo "GTK_PATH_FORCE=$($file.DirectoryName)" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8
+        } else {
+            Write-Error "CRITICAL: libcairo-2.dll not found!"
+            exit 1
+        }
+
     - name: Install Dependencies
       run: poetry install
 
     - name: Build with PyInstaller
-      run: poetry run pyinstaller main.spec
-
-    - name: List files in dist (Debug)
-      shell: bash
-      run: |
-        echo "Conteúdo da pasta dist:"
-        ls -R dist/
+      run: poetry run pyinstaller gradient-engineer.spec
 
     - name: Upload Artifacts
       uses: actions/upload-artifact@v4

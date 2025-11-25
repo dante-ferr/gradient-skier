@@ -3,6 +3,7 @@ from .sidebar import Sidebar
 from .theme import theme
 from .map_canvas import MapCanvas
 from ._loading_manager import LoadingManager
+import sys
 
 ctk.deactivate_automatic_dpi_awareness()
 
@@ -17,7 +18,12 @@ class App(ctk.CTk):
         from core import map_manager
 
         self.title("Gradient Engineer")
-        self.attributes("-zoomed", True)
+
+        if sys.platform.startswith("win"):
+            self.state("zoomed")
+        else:
+            self.attributes("-zoomed", True)
+
         self.minsize(width=800, height=600)
 
         map_manager.set_root(self)

@@ -1,31 +1,42 @@
 import sys
-from utils import Config as ConfigBase
+import os
 from pathlib import Path
-
+from utils import Config as ConfigBase
 
 class Config(ConfigBase):
+
     def __init__(self):
-        super().__init__("src/config.json")
-
-        # These are top-level properties
-        if self._config_path is not None:
-            self.PROJECT_ROOT = self.get_project_root()
-            self.ASSETS_PATH = self.PROJECT_ROOT / "assets"
-            self.TERRAIN_SAVES_PATH = self.PROJECT_ROOT / "data" / "terrain_saves"
-
-    def get_project_root(self) -> Path:
-        """
-        Determines the project's root directory, whether running from source
-        or as a frozen executable (e.g., from PyInstaller).
-        """
         if getattr(sys, "frozen", False):
-            # If frozen, the root is the directory containing the executable.
-            application_path = Path(sys.executable)
-            return application_path.parent
+            self.root_path = Path(sys._MEIPASS)
+            self.config_path = self.root_path / "config.json"
         else:
-            # If not frozen, we are running from source. The project root is derived
-            # from this file's location.
-            return Path(__file__).resolve().parent.parent
+            src_dir = Path(__file__).resolve().parent
+            self.root_path = src_dir.parent
+            self.config_path = src_dir / "config.json"
+
+        if not self.config_path.exists():
+            print(f"\n[CRITICAL] Config NOT found at: {self.config_path}")
+            if getattr(sys, "frozen", False):
+                print(f"[DEBUG] Listing _MEIPASS root ({self.root_path}):")
+                try:
+                    for item in self.root_path.iterdir():
+                        print(f" - {item.name}")
+                except Exception:
+                    pass
+
+        super().__init__(self.config_path)
+
+    @property
+    def PROJECT_ROOT(self) -> Path:
+        return self.root_path
+
+    @property
+    def ASSETS_PATH(self):
+        return self.root_path / "assets"
+
+    @property
+    def TERRAIN_SAVES_PATH(self):
+        return self.root_path / "data" / "terrain_saves"
 
 
 config = Config()

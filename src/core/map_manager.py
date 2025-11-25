@@ -1,5 +1,6 @@
 import json
 import numpy as np
+import importlib.resources
 from terrain_map.generator import MapGenerator
 from terrain_map import TerrainMap
 from config import config
@@ -96,12 +97,18 @@ class MapManager:
             if self.root:
                 self.root.after(self.MAP_RESULT_INTERVAL, self._check_for_map_result)
 
-    def load_map_from_json(
-        self, filepath: str = f"{config.TERRAIN_SAVES_PATH}/terrain_map.json"
-    ):
+    def load_map_from_json(self, filepath: str | None = None):
         """Loads a terrain map from a JSON file and sets it as the current map."""
         try:
-            with open(filepath, "r") as f:
+            if filepath is None:
+                filepath = str(
+                    importlib.resources.files("data")
+                    / "terrain_saves"
+                    / "terrain_map.json"
+                )
+            with open(
+                filepath, "r"
+            ) as f:  # Not using importlib.resources.open_text as we need the filepath
                 map_data = json.load(f)
 
             height_data = np.array(map_data["height_data"], dtype=np.uint8)
