@@ -30,11 +30,16 @@ class EmojiPin:
         self.emoji = emoji
         self.pin_color = pin_color
         self.size = size
+        self._cached_image: PhotoImage | None = None
 
     def get_image(self) -> PhotoImage:
         """
         Generates the composite pin image and returns it as a PhotoImage.
+        The image is cached to avoid re-rendering on subsequent calls.
         """
+        if self._cached_image:
+            return self._cached_image
+
         pin_svg_path = str(config.ASSETS_PATH / "svg" / "pin.svg")
         pin_image_obj = SvgImage(
             svg_path=pin_svg_path, fill=self.pin_color, size=self.size
@@ -68,7 +73,8 @@ class EmojiPin:
             print(f"Could not render emoji '{self.emoji}': {e}")
             # If emoji rendering fails, we still return the base pin.
 
-        return PhotoImage(composite_image)
+        self._cached_image = PhotoImage(composite_image)
+        return self._cached_image
 
     def _render_emoji_image(self) -> Image.Image:
         """

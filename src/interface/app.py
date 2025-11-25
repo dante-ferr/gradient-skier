@@ -4,6 +4,7 @@ from .theme import theme
 from .map_canvas import MapCanvas
 from ._loading_manager import LoadingManager
 
+ctk.deactivate_automatic_dpi_awareness()
 
 ctk.set_appearance_mode("Dark")
 ctk.set_default_color_theme(str(theme.path))

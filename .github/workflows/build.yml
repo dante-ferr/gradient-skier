@@ -1,0 +1,48 @@
+name: Build Executables
+
+on:
+  push:
+    branches: [ "master" ]
+
+jobs:
+  build:
+    name: Build for ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            artifact_name: gradient-engineer-linux
+            executable_path: dist/main
+          - os: windows-latest
+            artifact_name: gradient-engineer-windows.exe
+            executable_path: dist/main.exe
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python 3.12
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.12'
+
+    - name: Install Poetry
+      run: pip install poetry
+
+    - name: Install Dependencies
+      run: poetry install
+
+    - name: Build with PyInstaller
+      run: poetry run pyinstaller main.spec
+
+    - name: List files in dist (Debug)
+      shell: bash
+      run: |
+        echo "Conteúdo da pasta dist:"
+        ls -R dist/
+
+    - name: Upload Artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ matrix.artifact_name }}
+        path: dist/*
