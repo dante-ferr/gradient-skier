@@ -1,5 +1,6 @@
 from typing import TYPE_CHECKING
 from interface.components.emoji_pin import EmojiPin
+from PIL.ImageTk import PhotoImage
 
 if TYPE_CHECKING:
     from .map_canvas import MapCanvas
@@ -30,7 +31,8 @@ class CanvasPinsRenderer:
         else:
             # Pin doesn't exist, create it
             pin_factory = EmojiPin(emoji=emoji, size=(56, 56))
-            pin_image = pin_factory.get_image()
+            pil_image = pin_factory.get_pil_image()
+            pin_image = PhotoImage(pil_image)
 
             # Use create_image with the 'tags' parameter to identify the pin
             canvas_item_id = self.canvas.create_image(

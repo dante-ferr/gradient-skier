@@ -2,6 +2,7 @@ import customtkinter as ctk
 from .info_panel import InfoPanel
 from .terrain_3d_frame import Terrain3dFrame
 
+
 class Sidebar(ctk.CTkFrame):
     def __init__(self, parent):
         super().__init__(parent, fg_color="transparent")

@@ -16,6 +16,9 @@ noise = "*"
 matplotlib = "*"
 plotly = "*"
 cairosvg = "*"
+pilmoji = ">=2.0.0"
+requests = "^2.32.5"
+emoji = "1.7.0"
 
 [tool.poetry.group.dev.dependencies]
 pyinstaller = "^6.17.0"
