@@ -26,3 +26,7 @@ test-map-3d:
 test-map-all:
 	@echo "--- Running Map Generation Visual Test (Side-by-Side) ---"
 	poetry run python src/test_and_plot_map.py --plot-all
+
+package:
+	@echo "--- Packaging Application ---"
+	poetry run pyinstaller gradient-engineer.spec
