@@ -37,6 +37,16 @@ class SettingsFrame(ctk.CTkFrame):
 
         canvas_state_manager.add_callback("zoom", _callback)
 
+        # Code to test emoji pin quicker. This should be removed in the future.
+        # from interface.components.emoji_pin import EmojiPin
+
+        # emoji_pin = EmojiPin("🏠", size=(32, 32))
+        # ctk_image = ctk.CTkImage(
+        #     light_image=emoji_pin.get_pil_image(), size=emoji_pin.size
+        # )
+        # emoji_pin_label = ctk.CTkLabel(zoom_container, image=ctk_image, text="")
+        # emoji_pin_label.pack()
+
     def _handle_zoom(self, value: float):
         from state_managers import canvas_state_manager
 

@@ -1,6 +1,5 @@
 import numpy as np
 from scipy.ndimage import sobel
-from config import config
 from .tools import ExcavatorTool, FillerTool, GraderTool
 from typing import TYPE_CHECKING
 
